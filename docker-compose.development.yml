@@ -1,0 +1,18 @@
+version: "3.8"
+name: "ourtransfer-development"
+
+services:
+  db:
+    container_name: db
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_volume:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=admin123
+      - POSTGRES_DB=ourtransfer
+
+volumes:
+  db_volume:

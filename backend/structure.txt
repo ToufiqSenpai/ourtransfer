@@ -1,0 +1,68 @@
+src/
+├── app.module.ts
+├── main.ts
+├── config/
+│   └── configuration.ts
+│   └── validation.schema.ts
+│
+├── shared/
+│   ├── base/
+│   │   ├── base.entity.ts
+│   │   ├── base.repository.ts
+│   │   ├── base.service.ts
+│   │   ├── base.dto.ts
+│   │   └── base.mapper.ts
+│   ├── exceptions/
+│   │   └── http-exception.filter.ts
+│   ├── guards/
+│   ├── interceptors/
+│   ├── middlewares/
+│   └── utils/
+│       └── logger.util.ts
+│
+├── infrastructure/
+│   ├── database/
+│   │   ├── database.module.ts
+│   │   ├── database.providers.ts
+│   │   └── typeorm.config.ts
+│   └── mappers/
+│       └── automapper.profile.ts
+│
+├── modules/
+│   ├── user/
+│   │   ├── user.module.ts
+│   │   ├── user.controller.ts
+│   │   ├── application/
+│   │   │   ├── commands/
+│   │   │   │   ├── create-user.command.ts
+│   │   │   │   ├── handlers/
+│   │   │   │   │   └── create-user.handler.ts
+│   │   │   ├── queries/
+│   │   │   │   ├── get-user.query.ts
+│   │   │   │   ├── handlers/
+│   │   │   │   │   └── get-user.handler.ts
+│   │   ├── domain/
+│   │   │   ├── entities/
+│   │   │   │   └── user.entity.ts
+│   │   │   ├── repositories/
+│   │   │   │   └── user.repository.ts (interface)
+│   │   │   └── enums/
+│   │   ├── infrastructure/
+│   │   │   └── user.repository.impl.ts
+│   │   ├── dto/
+│   │   │   ├── create-user.dto.ts
+│   │   │   ├── user-response.dto.ts
+│   │   └── profiles/
+│   │       └── user.profile.ts
+│   │
+│   └── auth/
+│       └── (struktur serupa user)
+│
+├── common/
+│   ├── constants/
+│   ├── decorators/
+│   └── interfaces/
+│
+└── cqrs/
+    ├── command-bus.module.ts
+    └── event-bus.module.ts

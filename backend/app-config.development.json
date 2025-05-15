@@ -1,0 +1,16 @@
+{
+  "app": {
+    "port": 8081,
+    "appUrl": "http://127.0.0.1:8080"
+  },
+  "logger": {
+    "level": "debug",
+    "file": {
+      "enabled": true,
+      "outputPath": "application.log"
+    }
+  },
+  "database": {
+    "type": "postgres"
+  }
+}

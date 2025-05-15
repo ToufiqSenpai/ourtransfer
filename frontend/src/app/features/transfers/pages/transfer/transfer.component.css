@@ -1,0 +1,9 @@
+::ng-deep p-tab {
+  width: 50%;
+  text-align: center;
+}
+
+::ng-deep .p-tabpanels {
+  padding: 0;
+  margin-top: 18px;
+}

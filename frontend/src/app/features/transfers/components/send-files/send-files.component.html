@@ -1,0 +1,16 @@
+<div class="flex gap-2">
+  <div (click)="handleClickAddFiles()" class="text-center flex items-center justify-center h-10 bg-[#e0eaff] w-[50%] cursor-pointer rounded-lg">
+    <span class="material-symbols-outlined">add_circle</span>
+    <div class="ml-1">Add Files</div>
+  </div>
+  <div (click)="handleClickAddFolder()" class="text-center flex items-center justify-center h-10 bg-[#e0eaff] w-[50%] cursor-pointer rounded-lg">
+    <span class="material-symbols-outlined">add_circle</span>
+    <div class="ml-1">Add Files</div>
+  </div>
+</div>
+<div class="mt-4">
+  <p-floatlabel variant="on">
+    <input pInputText id="title" autocomplete="off" class="w-full" />
+    <label for="title">Title</label>
+  </p-floatlabel>
+</div>

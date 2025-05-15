@@ -1,0 +1,37 @@
+<form class="space-y-5 max-w-md max-mobile:max-w-[95%] m-auto h-max absolute top-0 bottom-0 left-0 right-0 rounded-lg">
+  <div class='text-center px-4'>
+    <h6 class="font-bold">Sign In</h6>
+    <p class="font-light">to continue to your OurTransfer account.</p>
+  </div>
+  <div class="px-4">
+    <p-floatlabel variant="on">
+      <input pInputText pSize="large" class="w-full" type="email" id="email" name="email" required />
+      <label for="email">Email</label>
+    </p-floatlabel>
+    <p-floatlabel variant="on" class="mt-4">
+      <input pInputText pSize="large" class="w-full" type="password" id="password" name="password" required />
+      <label for="password">Password</label>
+    </p-floatlabel>
+  </div>
+  <div class="px-4">
+    <p-button severity="contrast" size="large">Continue</p-button>
+  </div>
+  <div class="px-4">
+    <div class="text-sm text-center text-gray-500">
+      <span (click)="navigateToPasswordRecovery()" class="cursor-pointer underline hover:no-underline">Forget Password?</span>
+    </div>
+  </div>
+  <p-divider><p>or</p></p-divider>
+  <div class="px-4">
+    <p-button severity="contrast" variant="outlined" size="large" styleClass="flex items-center gap-2">
+      <img ngSrc="/assets/icons/google-icon.png" width="20" height="20" alt="Google icon" />
+      <span>Continue with Google</span>
+    </p-button>
+  </div>
+  <div class="px-4">
+    <p class="text-sm text-center text-gray-500">
+      Don't have an account?
+      <span (click)="navigateToSignup()" class="underline text-black cursor-pointer hover:no-underline hover:text-gray-500">Sign up</span>.
+    </p>
+  </div>
+</form>
