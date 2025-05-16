@@ -26,6 +26,7 @@ import { VerifyPasswordResetDto } from '../../application/dtos/verify-password-r
 import { GoogleAuthResponseDto } from '../../application/dtos/google-auth-response.dto'
 import { SignupValidationPipe } from '../pipes/signup-validation.pipe'
 import { CommandBus } from '@nestjs/cqrs'
+import { SignupCommand } from '../../application/commands/signup.command'
 
 @ApiTags('Authentication')
 @Controller('/auth')
@@ -58,7 +59,7 @@ export class AuthController {
   @ApiBadRequestResponse({ type: SignupBadRequestDto })
   @UsePipes(SignupValidationPipe)
   public signup(@Body() dto: SignupDto): Promise<CommonResponseDto> {
-    return this.commandBus.execute<SignupDto, CommonResponseDto>(dto)
+    return this.commandBus.execute<SignupCommand, CommonResponseDto>(new SignupCommand(dto))
   }
 
   @Post('/login')

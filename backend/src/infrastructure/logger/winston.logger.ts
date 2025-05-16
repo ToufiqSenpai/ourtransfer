@@ -1,16 +1,16 @@
 import { Inject, Injectable, Scope } from '@nestjs/common'
 import { Logger } from '../../common/interfaces/logger.interface'
 import winston, { format, transports, createLogger } from 'winston'
-import { LoggerConfig } from '../../configs/logger.config'
 import { INQUIRER } from '@nestjs/core'
 import { LogLevel } from '../../common/enums/log-level.enum'
+import { ConfigService } from '@nestjs/config'
 
 @Injectable({ scope: Scope.TRANSIENT })
 export class WinstonLogger implements Logger {
   private logger: winston.Logger
 
   public constructor(
-    private readonly config: LoggerConfig,
+    private readonly config: ConfigService,
     @Inject(INQUIRER) parentClass: object,
   ) {
     this.logger = createLogger({
@@ -21,7 +21,7 @@ export class WinstonLogger implements Logger {
         },
         {} as Record<string, number>,
       ),
-      level: config.level,
+      level: this.config.get<LogLevel>('logger.level'),
       transports: [
         new transports.Console({
           format: format.combine(
@@ -36,11 +36,11 @@ export class WinstonLogger implements Logger {
       ],
     })
 
-    if (this.config.isFileLoggingEnabled) {
+    if (this.config.get<boolean>('logger.file.enabled')) {
       this.logger.add(
         new transports.File({
-          filename: this.config.fileOutputPath,
-          level: this.config.level,
+          filename: this.config.get<string>('logger.file.outputPath'),
+          level: this.config.get<LogLevel>('logger.level'),
           format: format.json(),
         }),
       )

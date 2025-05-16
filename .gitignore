@@ -51,3 +51,6 @@ typings/
 .DS_Store
 Thumbs.db
 ehthumbs.db
+
+# Log
+**/application.log

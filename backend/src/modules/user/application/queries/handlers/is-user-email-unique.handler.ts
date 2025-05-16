@@ -1,7 +1,7 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs'
 import { Inject } from '@nestjs/common'
 import { IsUserEmailUniqueQuery } from '../is-user-email-unique.query'
-import { USER_REPOSITORY, UserRepository } from 'src/modules/user/domain/repositories/user.repository'
+import { USER_REPOSITORY, UserRepository } from '../../../domain/repositories/user.repository'
 
 @QueryHandler(IsUserEmailUniqueQuery)
 export class IsUserEmailUniqueHandler implements IQueryHandler<IsUserEmailUniqueQuery, boolean> {

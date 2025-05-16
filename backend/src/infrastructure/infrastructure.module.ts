@@ -1,19 +1,27 @@
 import { Global, Module } from '@nestjs/common'
 import { LOGGER } from '../common/interfaces/logger.interface'
 import { WinstonLogger } from './logger/winston.logger'
-import { SECRET_MANAGER } from '../common/interfaces/secret-manager.interface'
+import { SecretManager } from '../common/abstracts/secret-manager.abstract'
 import { EnvSecretManager } from './secrets/env.secret-manager'
+import { PASSWORD_HASHER } from '../common/interfaces/password-hasher.interface'
+import { Argon2idPasswordHasher } from './password-hasher/argon2id.password-hasher'
+import { DatabaseModule } from './database/database.module'
 
 @Global()
 @Module({
+  imports: [DatabaseModule],
   providers: [
     {
       provide: LOGGER,
       useClass: WinstonLogger,
     },
     {
-      provide: SECRET_MANAGER,
+      provide: SecretManager,
       useClass: EnvSecretManager,
+    },
+    {
+      provide: PASSWORD_HASHER,
+      useClass: Argon2idPasswordHasher,
     },
   ],
   exports: [
@@ -22,8 +30,12 @@ import { EnvSecretManager } from './secrets/env.secret-manager'
       useClass: WinstonLogger,
     },
     {
-      provide: SECRET_MANAGER,
+      provide: SecretManager,
       useClass: EnvSecretManager,
+    },
+    {
+      provide: PASSWORD_HASHER,
+      useClass: Argon2idPasswordHasher,
     },
   ],
 })

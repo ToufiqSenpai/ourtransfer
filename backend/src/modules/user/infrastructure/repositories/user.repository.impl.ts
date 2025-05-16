@@ -1,9 +1,10 @@
+import { InjectDataSource } from '@nestjs/typeorm'
 import { User } from '../../domain/entities/user.entity'
 import { UserRepository } from '../../domain/repositories/user.repository'
 import { DataSource } from 'typeorm'
 
 export class UserRepositoryImpl implements UserRepository {
-  public constructor(private readonly dataSource: DataSource) {}
+  public constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
 
   public async create(item: User): Promise<User> {
     const userRepository = this.dataSource.getRepository(User)

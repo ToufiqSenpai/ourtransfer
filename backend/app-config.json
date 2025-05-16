@@ -1,7 +1,7 @@
 {
   "app": {
     "port": 8081,
-    "appUrl": "http://127.0.0.1:8080"
+    "domain": "http://127.0.0.1:8080"
   },
   "logger": {
     "level": "debug",
@@ -11,6 +11,7 @@
     }
   },
   "database": {
-    "type": "postgres"
+    "type": "postgres",
+    "ssl": false
   }
 }

@@ -1,14 +1,12 @@
 import { ICommandHandler, CommandHandler } from '@nestjs/cqrs'
 import { CreatePasswordAuthCommand } from '../create-password-auth.command'
 import { Inject } from '@nestjs/common'
-import { PASSWORD_HASHER, PasswordHasher } from 'src/common/interfaces/password-hasher.interface'
-import {
-  PASSWORD_AUTH_REPOSITORY,
-  PasswordAuthRepository,
-} from 'src/modules/auth/domain/repositories/password-auth.repository'
+import { PASSWORD_HASHER, PasswordHasher } from '../../../../../common/interfaces/password-hasher.interface'
+import { PASSWORD_AUTH_REPOSITORY, PasswordAuthRepository } from '../../../domain/repositories/password-auth.repository'
 import { InjectMapper } from '@automapper/nestjs'
 import { Mapper } from '@automapper/core'
-import { PasswordAuth } from 'src/modules/auth/domain/entities/password-auth.entity'
+import { PasswordAuth } from '../../../domain/entities/password-auth.entity'
+import { CreatePasswordAuthDto } from '../../dtos/create-password-auth.dto'
 
 @CommandHandler(CreatePasswordAuthCommand)
 export class CreatePasswordAuthHandler implements ICommandHandler<CreatePasswordAuthCommand> {
@@ -19,8 +17,8 @@ export class CreatePasswordAuthHandler implements ICommandHandler<CreatePassword
   ) {}
 
   public async execute(command: CreatePasswordAuthCommand): Promise<void> {
-    const passwordAuth = this.mapper.map(command, CreatePasswordAuthCommand, PasswordAuth)
-    passwordAuth.password = await this.passwordHasher.hash(command.password)
+    const passwordAuth = this.mapper.map(command.dto, CreatePasswordAuthDto, PasswordAuth)
+    passwordAuth.password = await this.passwordHasher.hash(passwordAuth.password)
 
     await this.passwordAuthRepository.create(passwordAuth)
   }

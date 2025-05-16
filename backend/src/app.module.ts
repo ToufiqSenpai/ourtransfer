@@ -6,6 +6,8 @@ import { ConfigModule } from './configs/config.module'
 import { InfrastructureModule } from './infrastructure/infrastructure.module'
 import { SharedModule } from './shared/shared.module'
 import { CqrsModule } from '@nestjs/cqrs'
+import { AutomapperModule } from '@automapper/nestjs'
+import { classes } from '@automapper/classes'
 
 @Module({
   imports: [
@@ -16,8 +18,11 @@ import { CqrsModule } from '@nestjs/cqrs'
     ConfigModule,
     SharedModule,
     CqrsModule.forRoot(),
+    AutomapperModule.forRoot({
+      strategyInitializer: classes(),
+    }),
   ],
   // controllers: [AppController],
   // providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

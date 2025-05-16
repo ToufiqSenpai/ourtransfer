@@ -21,7 +21,7 @@ export class SignupValidationPipe implements PipeTransform<object, Promise<Signu
         .max(100, { message: 'Email must be less than 100 characters.' })
         .email({ message: 'Email must be a valid email address.' })
         .refine(async email => await this.queryBus.execute(new IsUserEmailUniqueQuery(email)), {
-          message: 'Email already exists.',
+          message: 'Email already in use.',
         }),
       password: z
         .string({ required_error: 'Password is required.', invalid_type_error: 'Password must be string.' })
@@ -30,6 +30,6 @@ export class SignupValidationPipe implements PipeTransform<object, Promise<Signu
     })
     const parsedValue = await schema.parseAsync(value)
 
-    return plainToInstance(SignupDto, parsedValue) as SignupDto
+    return plainToInstance(SignupDto, parsedValue)
   }
 }
