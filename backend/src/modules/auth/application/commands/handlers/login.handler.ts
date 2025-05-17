@@ -24,5 +24,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
         }),
       )
     }
+
+    return Promise.resolve(new TokensDto())
   }
 }

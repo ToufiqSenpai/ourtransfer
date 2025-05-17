@@ -1,6 +1,6 @@
 export const JWT = Symbol('JWT')
 
 export interface Jwt {
-  signAccessToken(userId: string): Promise<string>
-  verifyAccessToken(token: string): Promise<string | null>
+  sign(userId: string): Promise<string>
+  verify(token: string): Promise<string | null>
 }

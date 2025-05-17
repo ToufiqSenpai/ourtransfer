@@ -6,6 +6,7 @@ import { EnvSecretManager } from './secrets/env.secret-manager'
 import { PASSWORD_HASHER } from '../common/interfaces/password-hasher.interface'
 import { Argon2idPasswordHasher } from './password-hasher/argon2id.password-hasher'
 import { DatabaseModule } from './database/database.module'
+import { ACCESS_TOKEN_JWT, AccessTokenJwt } from './jwt/access-token.jwt'
 
 @Global()
 @Module({
@@ -23,6 +24,10 @@ import { DatabaseModule } from './database/database.module'
       provide: PASSWORD_HASHER,
       useClass: Argon2idPasswordHasher,
     },
+    {
+      provide: ACCESS_TOKEN_JWT,
+      useClass: AccessTokenJwt,
+    },
   ],
   exports: [
     {
@@ -36,6 +41,10 @@ import { DatabaseModule } from './database/database.module'
     {
       provide: PASSWORD_HASHER,
       useClass: Argon2idPasswordHasher,
+    },
+    {
+      provide: ACCESS_TOKEN_JWT,
+      useClass: AccessTokenJwt,
     },
   ],
 })
