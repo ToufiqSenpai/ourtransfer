@@ -1,4 +1,4 @@
-import { PasswordHasher } from '../../common/interfaces/password-hasher.interface'
+import { PasswordHasher } from '../../common/interfaces/hash/password-hasher.interface'
 import { Injectable } from '@nestjs/common'
 import { Algorithm, hash, verify } from '@node-rs/argon2'
 

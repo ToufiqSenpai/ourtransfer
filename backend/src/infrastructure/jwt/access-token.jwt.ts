@@ -1,5 +1,5 @@
-import { jwtVerify, SignJWT } from 'jose'
-import { Jwt } from '../../common/interfaces/jwt.interface'
+import { sign, verify } from 'jsonwebtoken'
+import { Jwt } from '../../common/interfaces/jwt/jwt.interface'
 import { ConfigService } from '@nestjs/config'
 import { SecretManager } from '../../common/abstracts/secret-manager.abstract'
 
@@ -16,22 +16,29 @@ export class AccessTokenJwt implements Jwt {
   public async sign(userId: string): Promise<string> {
     const secret = await this.secretManager.getOrThrow('ACCESS_TOKEN_SECRET')
 
-    return await new SignJWT({ sub: userId })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuer(this.config.get('app.domain')!)
-      .setAudience(this.JWT_ISSUER)
-      .setIssuedAt()
-      .setExpirationTime('1h')
-      .sign(Buffer.from(secret, 'utf-8'))
+    return sign({ sub: userId }, secret, {
+      algorithm: 'HS256',
+      issuer: this.config.get('app.domain'),
+      audience: this.JWT_ISSUER,
+      expiresIn: '1h',
+    })
   }
 
   public async verify(token: string): Promise<string | null> {
-    const secret = await this.secretManager.getOrThrow('ACCESS_TOKEN_SECRET')
-    const { payload } = await jwtVerify(token, Buffer.from(secret, 'utf-8'), {
+    const payload = verify(token, await this.secretManager.getOrThrow('ACCESS_TOKEN_SECRET'), {
+      algorithms: ['HS256'],
       issuer: this.config.get('app.domain'),
       audience: this.JWT_ISSUER,
     })
 
-    return payload.sub || null
+    if (typeof payload === 'string') {
+      return null
+    }
+
+    if (typeof payload === 'object' && payload.sub) {
+      return payload.sub
+    }
+
+    return null
   }
 }

@@ -18,6 +18,7 @@ export class PasswordAuthRepositoryImpl implements PasswordAuthRepository {
     return this.dataSource
       .getRepository(PasswordAuth)
       .createQueryBuilder()
+      .leftJoinAndSelect('passwordAuth.user', 'user')
       .where('passwordAuth.email = :email', { email })
       .getOne()
   }

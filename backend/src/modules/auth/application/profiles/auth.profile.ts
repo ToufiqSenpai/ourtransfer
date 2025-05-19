@@ -1,6 +1,5 @@
 import { AutomapperProfile, InjectMapper } from '@automapper/nestjs'
 import { createMap, forMember, mapFrom, Mapper } from '@automapper/core'
-import { CreatePasswordAuthCommand } from '../commands/create-password-auth.command'
 import { PasswordAuth } from '../../domain/entities/password-auth.entity'
 import { SignupDto } from '../dtos/signup.dto'
 import { CreateUserDto } from '../../../../modules/user/application/dtos/create-user.dto'
@@ -16,7 +15,7 @@ export class AuthProfile extends AutomapperProfile {
       // Signup Profile
       createMap(
         mapper,
-        CreatePasswordAuthDto,
+        SignupDto,
         PasswordAuth,
         forMember(
           d => d.userEmail,

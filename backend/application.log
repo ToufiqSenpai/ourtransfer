@@ -43,3 +43,69 @@
 {"level":"info","message":"Mapped {/api/transfers/:transferId/files/:fileId/:partId, POST} (version: 1) route"}
 {"level":"info","message":"Nest application successfully started"}
 {"level":"info","message":"Server is running on port 8081"}
+{"level":"debug","message":"Query: SELECT version() -- Parameters: undefined"}
+{"level":"debug","message":"Query: SELECT * FROM current_schema() -- Parameters: undefined"}
+{"level":"info","message":"All classes found using provided glob pattern \"D:\\WebProject\\project-transfer\\backend\\src\\infrastructure\\database/../../**/*.entity{.ts,.js}\" : \"D:\\WebProject\\project-transfer\\backend\\src\\shared\\base\\base.entity.ts,D:\\WebProject\\project-transfer\\backend\\src\\modules\\user\\domain\\entities\\user.entity.ts,D:\\WebProject\\project-transfer\\backend\\src\\modules\\auth\\domain\\entities\\password-auth.entity.ts\""}
+{"level":"debug","message":"Query: CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\" -- Parameters: undefined"}
+{"level":"debug","message":"Query: START TRANSACTION -- Parameters: undefined"}
+{"level":"debug","message":"Query: SELECT * FROM current_schema() -- Parameters: undefined"}
+{"level":"debug","message":"Query: SELECT * FROM current_database() -- Parameters: undefined"}
+{"level":"debug","message":"Query: SELECT \"table_schema\", \"table_name\", obj_description(('\"' || \"table_schema\" || '\".\"' || \"table_name\" || '\"')::regclass, 'pg_class') AS table_comment FROM \"information_schema\".\"tables\" WHERE (\"table_schema\" = 'public' AND \"table_name\" = 'user') OR (\"table_schema\" = 'public' AND \"table_name\" = 'password_auth') -- Parameters: undefined"}
+{"level":"debug","message":"Query: SELECT * FROM \"information_schema\".\"tables\" WHERE \"table_schema\" = 'public' AND \"table_name\" = 'typeorm_metadata' -- Parameters: undefined"}
+{"level":"info","message":"Schema Build: creating a new table: public.user"}
+{"level":"debug","message":"Query: CREATE TABLE \"user\" (\"id\" uuid NOT NULL DEFAULT uuid_generate_v4(), \"createdAt\" TIMESTAMP NOT NULL DEFAULT now(), \"updatedAt\" TIMESTAMP NOT NULL DEFAULT now(), \"name\" character varying NOT NULL, \"email\" character varying NOT NULL, CONSTRAINT \"UQ_e12875dfb3b1d92d7d7c5377e22\" UNIQUE (\"email\"), CONSTRAINT \"PK_cace4a159ff9f2512dd42373760\" PRIMARY KEY (\"id\")) -- Parameters: undefined"}
+{"level":"info","message":"Schema Build: creating a new table: public.password_auth"}
+{"level":"debug","message":"Query: CREATE TABLE \"password_auth\" (\"id\" uuid NOT NULL DEFAULT uuid_generate_v4(), \"createdAt\" TIMESTAMP NOT NULL DEFAULT now(), \"updatedAt\" TIMESTAMP NOT NULL DEFAULT now(), \"userEmail\" character varying NOT NULL, \"password\" character varying NOT NULL, CONSTRAINT \"REL_89f99e3014924c726c57d14af2\" UNIQUE (\"userEmail\"), CONSTRAINT \"PK_70a0191559be9b67bef9c64d5ca\" PRIMARY KEY (\"id\")) -- Parameters: undefined"}
+{"level":"info","message":"Schema Build: creating a foreign keys: FK_89f99e3014924c726c57d14af25 on table \"password_auth\""}
+{"level":"debug","message":"Query: ALTER TABLE \"password_auth\" ADD CONSTRAINT \"FK_89f99e3014924c726c57d14af25\" FOREIGN KEY (\"userEmail\") REFERENCES \"user\"(\"email\") ON DELETE NO ACTION ON UPDATE NO ACTION -- Parameters: undefined"}
+{"level":"debug","message":"Query: COMMIT -- Parameters: undefined"}
+{"level":"info","message":"UserController {/api/users} (version: 1):"}
+{"level":"debug","message":"Query: SELECT COUNT(1) AS \"cnt\" FROM \"user\" \"User\" WHERE ((\"User\".\"email\" = $1)) -- Parameters: [\"Kiana61@gmail.com\"]"}
+{"level":"info","message":"Mapped {/api/users/me, GET} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/users/me, PATCH} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/users/me, DELETE} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/users/me/avatar, PUT} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/users/me/avatar, GET} (version: 1) route"}
+{"level":"info","message":"AuthController {/api/auth} (version: 1):"}
+{"level":"info","message":"Mapped {/api/auth/login-provider, POST} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/auth/email/request, POST} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/auth/email/verify, POST} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/auth/signup, POST} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/auth/login, POST} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/auth/google, GET} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/auth/google/redirect, GET} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/auth/password-reset, POST} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/auth/password-reset/verify, POST} (version: 1) route"}
+{"level":"info","message":"TransferController {/api/transfers} (version: 1):"}
+{"level":"info","message":"Mapped {/api/transfers, POST} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/transfers, GET} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/transfers/:transferId, GET} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/transfers/:transferId/finalize, GET} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/transfers/:transferId/prepare-download, GET} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/transfers/:transferId/download, GET} (version: 1) route"}
+{"level":"info","message":"Mapped {/api/transfers/:transferId/files/:fileId/:partId, POST} (version: 1) route"}
+{"level":"info","message":"Nest application successfully started"}
+{"level":"debug","message":"Query: INSERT INTO \"user\"(\"id\", \"createdAt\", \"updatedAt\", \"name\", \"email\") VALUES (DEFAULT, DEFAULT, DEFAULT, $1, $2) RETURNING \"id\", \"createdAt\", \"updatedAt\" -- Parameters: [\"Ernestine Jenkins Jr.\",\"Kiana61@gmail.com\"]"}
+{"level":"debug","message":"Query: SELECT \"User\".\"id\" AS \"User_id\", \"User\".\"createdAt\" AS \"User_createdAt\", \"User\".\"updatedAt\" AS \"User_updatedAt\", \"User\".\"name\" AS \"User_name\", \"User\".\"email\" AS \"User_email\" FROM \"user\" \"User\" WHERE ((\"User\".\"id\" = $1)) LIMIT 1 -- Parameters: [\"9faa7c7d-347f-4605-ac20-4e99939d65a5\"]"}
+{"level":"debug","message":"Query: START TRANSACTION -- Parameters: undefined"}
+{"level":"debug","message":"Query: INSERT INTO \"password_auth\"(\"id\", \"createdAt\", \"updatedAt\", \"userEmail\", \"password\") VALUES (DEFAULT, DEFAULT, DEFAULT, $1, $2) RETURNING \"id\", \"createdAt\", \"updatedAt\" -- Parameters: [\"Kiana61@gmail.com\",\"$argon2id$v=19$m=8192,t=4,p=4$HENJLI3KQNezjPmioPNJiA$rGehyDt+qn1HivntJxY+F4r1ciSetP4vTvHD849MR20\"]"}
+{"level":"debug","message":"Query: COMMIT -- Parameters: undefined"}
+{"level":"info","message":"[2025-05-18T03:27:23.752Z] POST /api/v1/auth/signup - 201 (118ms)"}
+{"level":"debug","message":"Query: SELECT COUNT(1) AS \"cnt\" FROM \"user\" \"User\" WHERE ((\"User\".\"email\" = $1)) -- Parameters: [\"Alanna.Shanahan@gmail.com\"]"}
+{"level":"debug","message":"Query: SELECT COUNT(1) AS \"cnt\" FROM \"user\" \"User\" WHERE ((\"User\".\"email\" = $1)) -- Parameters: [\"Stone_Champlin87@gmail.com\"]"}
+{"level":"debug","message":"Query: SELECT COUNT(1) AS \"cnt\" FROM \"user\" \"User\" WHERE ((\"User\".\"email\" = $1)) -- Parameters: [\"invalid-email\"]"}
+{"level":"debug","message":"Query: SELECT COUNT(1) AS \"cnt\" FROM \"user\" \"User\" WHERE ((\"User\".\"email\" = $1)) -- Parameters: [\"Raul20@gmail.com\"]"}
+{"level":"debug","message":"Query: SELECT COUNT(1) AS \"cnt\" FROM \"user\" \"User\" WHERE ((\"User\".\"email\" = $1)) -- Parameters: [\"Janelle_Sporer17@gmail.com\"]"}
+{"level":"debug","message":"Query: SELECT COUNT(1) AS \"cnt\" FROM \"user\" \"User\" WHERE ((\"User\".\"email\" = $1)) -- Parameters: [\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@e.com\"]"}
+{"level":"debug","message":"Query: SELECT COUNT(1) AS \"cnt\" FROM \"user\" \"User\" WHERE ((\"User\".\"email\" = $1)) -- Parameters: [\"Francisco.Becker@hotmail.com\"]"}
+{"level":"debug","message":"Query: SELECT COUNT(1) AS \"cnt\" FROM \"user\" \"User\" WHERE ((\"User\".\"email\" = $1)) -- Parameters: [\"Frederique.Botsford86@yahoo.com\"]"}
+{"level":"debug","message":"Query: INSERT INTO \"user\"(\"id\", \"createdAt\", \"updatedAt\", \"name\", \"email\") VALUES (DEFAULT, DEFAULT, DEFAULT, $1, $2) RETURNING \"id\", \"createdAt\", \"updatedAt\" -- Parameters: [\"Violet VonRueden\",\"Frederique.Botsford86@yahoo.com\"]"}
+{"level":"debug","message":"Query: SELECT \"User\".\"id\" AS \"User_id\", \"User\".\"createdAt\" AS \"User_createdAt\", \"User\".\"updatedAt\" AS \"User_updatedAt\", \"User\".\"name\" AS \"User_name\", \"User\".\"email\" AS \"User_email\" FROM \"user\" \"User\" WHERE ((\"User\".\"id\" = $1)) LIMIT 1 -- Parameters: [\"d6789272-128f-4f52-8933-feb7f00a570b\"]"}
+{"level":"debug","message":"Query: START TRANSACTION -- Parameters: undefined"}
+{"level":"debug","message":"Query: INSERT INTO \"password_auth\"(\"id\", \"createdAt\", \"updatedAt\", \"userEmail\", \"password\") VALUES (DEFAULT, DEFAULT, DEFAULT, $1, $2) RETURNING \"id\", \"createdAt\", \"updatedAt\" -- Parameters: [\"Frederique.Botsford86@yahoo.com\",\"$argon2id$v=19$m=8192,t=4,p=4$Qt65W+5s94S9D2VPNE+5HQ$RqHsK2EXbvNXkDxr/1NvXq8H143DlDRbo1AM6SHxJ6U\"]"}
+{"level":"debug","message":"Query: COMMIT -- Parameters: undefined"}
+{"level":"info","message":"[2025-05-18T03:27:23.923Z] POST /api/v1/auth/signup - 201 (53ms)"}
+{"level":"debug","message":"Query: SELECT COUNT(1) AS \"cnt\" FROM \"user\" \"User\" WHERE ((\"User\".\"email\" = $1)) -- Parameters: [\"Frederique.Botsford86@yahoo.com\"]"}
+{"level":"debug","message":"Query: SELECT COUNT(1) AS \"cnt\" FROM \"user\" \"User\" WHERE ((\"User\".\"email\" = $1)) -- Parameters: [\"Felton_Rippin@gmail.com\"]"}
+{"level":"debug","message":"Query: SELECT COUNT(1) AS \"cnt\" FROM \"user\" \"User\" WHERE ((\"User\".\"email\" = $1)) -- Parameters: [\"Catalina_Bernhard15@hotmail.com\"]"}
+{"level":"warn","message":"Postgres pool raised an error. error: terminating connection due to administrator command"}

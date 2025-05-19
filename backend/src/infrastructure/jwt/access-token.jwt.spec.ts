@@ -2,6 +2,7 @@ import { AccessTokenJwt } from './access-token.jwt'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { ConfigService } from '@nestjs/config'
 import { SecretManager } from '../../common/abstracts/secret-manager.abstract'
+import { sign } from 'jsonwebtoken'
 
 describe('AccessTokenJwt', () => {
   const mockSecret = 'test-secret'
@@ -38,14 +39,13 @@ describe('AccessTokenJwt', () => {
     })
 
     it('should return null for a token with no sub', async () => {
-      const { SignJWT } = await import('jose')
-      const token = await new SignJWT({ foo: 'bar' })
-        .setProtectedHeader({ alg: 'HS256' })
-        .setIssuer(mockDomain)
-        .setAudience('ourtransfer-client')
-        .setIssuedAt()
-        .setExpirationTime('1h')
-        .sign(Buffer.from(mockSecret, 'utf-8'))
+      // Using jsonwebtoken directly instead of jose
+      const token = sign({ foo: 'bar' }, mockSecret, {
+        algorithm: 'HS256',
+        issuer: mockDomain,
+        audience: 'ourtransfer-client',
+        expiresIn: '1h',
+      })
 
       const result = await jwt.verify(token)
       expect(result).toBeNull()
