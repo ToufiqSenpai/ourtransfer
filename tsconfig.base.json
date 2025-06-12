@@ -17,7 +17,10 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@ourtransfer/shared": ["shared/src/index.ts"],
+      "@ourtransfer/shared-dtos": ["shared-dtos/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }
