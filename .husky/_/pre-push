@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+. "$(dirname "$0")/h"
+
+echo "Running tests on affected projects..."
+npx nx affected --target=test --parallel --base=origin/main --head=HEAD

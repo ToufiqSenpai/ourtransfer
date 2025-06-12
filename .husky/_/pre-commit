@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+. "$(dirname "$0")/h"
+
+echo "Running format and lint on affected projects..."
+npx nx format:write --base=origin/main --head=HEAD
+npx nx affected --target=lint --parallel --base=origin/main --head=HEAD
