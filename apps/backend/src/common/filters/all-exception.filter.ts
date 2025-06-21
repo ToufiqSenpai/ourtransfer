@@ -6,7 +6,7 @@ import { Response } from 'express'
 export class AllExceptionFilter implements ExceptionFilter {
   public constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
 
-  public catch(exception: Error, host: ArgumentsHost) {
+  public catch(exception: Error, host: ArgumentsHost): void {
     const { httpAdapter } = this.httpAdapterHost
     const ctx = host.switchToHttp()
 

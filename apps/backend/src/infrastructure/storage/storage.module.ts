@@ -1,6 +1,6 @@
 import { BlobServiceClient, ContainerClient } from '@azure/storage-blob'
 import { Global, Module } from '@nestjs/common'
-import { SecretManager } from '../../common/abstracts/secrets/secret-manager.abstract'
+import { SecretManager } from '../../common/abstracts/secret/secret-manager.abstract'
 import { FILE_STORAGE } from '../../common/interfaces/storage/file-storage.interface'
 import { AzureBlobStorage } from './azure-blob.storage'
 
@@ -9,7 +9,7 @@ import { AzureBlobStorage } from './azure-blob.storage'
   providers: [
     {
       provide: ContainerClient,
-      async useFactory(secretManager: SecretManager) {
+      async useFactory(secretManager: SecretManager): Promise<ContainerClient> {
         const connectionString = await secretManager.getOrThrow('AZURE_STORAGE_CONNECTION_STRING')
         const containerName = await secretManager.getOrThrow('AZURE_STORAGE_CONTAINER_NAME')
         const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString)
@@ -17,7 +17,6 @@ import { AzureBlobStorage } from './azure-blob.storage'
 
         await containerClient.createIfNotExists()
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return containerClient
       },
       inject: [SecretManager],

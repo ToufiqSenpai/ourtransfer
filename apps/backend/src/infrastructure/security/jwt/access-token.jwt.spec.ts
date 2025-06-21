@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { ConfigService } from '@nestjs/config'
-import { SecretManager } from '../../../common/abstracts/secrets/secret-manager.abstract'
+import { SecretManager } from '../../../common/abstracts/secret/secret-manager.abstract'
 import { AccessTokenJwtImpl } from './access-token.jwt.impl'
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended'
 import * as jwt from 'jsonwebtoken'
-import { SecretNotFoundException } from '../../../shared/exceptions/secret-not-found.exception'
+import { SecretNotFoundException } from '../../../common/exceptions/secret-not-found.exception'
 
 // Mock the jsonwebtoken library
 jest.mock('jsonwebtoken', () => ({

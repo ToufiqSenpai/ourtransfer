@@ -3,7 +3,7 @@ import { ZodError } from 'zod'
 
 @Catch(ZodError)
 export class ZodExceptionFilter implements ExceptionFilter {
-  public catch(exception: ZodError, host: ArgumentsHost) {
+  public catch(exception: ZodError, host: ArgumentsHost): void {
     const context = host.switchToHttp()
     const res = context.getResponse()
 
