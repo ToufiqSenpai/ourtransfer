@@ -191,7 +191,7 @@ export default tseslint.config(
       "@typescript-eslint/no-loop-func": "error",
       "no-magic-numbers": "off",
       "@typescript-eslint/no-magic-numbers": [
-        "error",
+        "off",
         {
           ignore: [-1, 0, 1],
           ignoreArrayIndexes: true,

@@ -17,7 +17,9 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@ourtransfer/configs": ["libs/configs/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }
