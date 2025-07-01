@@ -1,4 +1,4 @@
-import { Readable } from 'stream'
+import { Readable } from "stream"
 
 export interface FileHeaders {
   cacheControl?: string
@@ -22,12 +22,12 @@ export interface FileProperties {
 }
 
 export enum FileOperation {
-  READ = 'read',
-  WRITE = 'write',
-  DELETE = 'delete',
+  READ = "read",
+  WRITE = "write",
+  DELETE = "delete",
 }
 
-export const FILE_STORAGE = Symbol('FileStorage')
+export const FILE_STORAGE = Symbol("FileStorage")
 
 export interface FileStorage {
   initiateMultipartUpload(filePath: string, headers?: FileHeaders, metadata?: FileMetadata): Promise<void>

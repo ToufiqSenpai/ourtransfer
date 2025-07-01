@@ -1,4 +1,4 @@
-export const LOGGER = Symbol('LOGGER')
+export const LOGGER = Symbol("LOGGER")
 
 export interface Logger {
   trace(message: string, ...args: any[]): void

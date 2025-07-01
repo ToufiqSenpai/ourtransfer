@@ -1,26 +1,23 @@
-import React from 'react'
-import { WorkerHost } from '@nestjs/bullmq'
-import { Job } from 'bullmq'
-import { render } from '@react-email/render'
-import { resolve } from 'path'
-import { Logger } from '../../../common/interfaces/logger/logger.interface'
-import { Email } from '../../../common/interfaces/email/email.interface'
-import { plainToInstance } from 'class-transformer'
+import React from "react"
+import { WorkerHost } from "@nestjs/bullmq"
+import { Job } from "bullmq"
+import { render } from "@react-email/render"
+import { resolve } from "path"
+import { Logger } from "../../../common/interfaces/logger/logger.interface"
+import { Email } from "../../../common/interfaces/email/email.interface"
+import { plainToInstance } from "class-transformer"
 
-export const EMAIL_QUEUE = 'email'
+export const EMAIL_QUEUE = "email"
 
 export class EmailConsumerData<D = Record<string, any>> {
   public to: string
-  public subject?: string = 'Default Subject'
-  public text?: string = ''
+  public subject?: string = "Default Subject"
+  public text?: string = ""
   public htmlData?: D
 }
 
 export class EmailConsumer extends WorkerHost {
-  public constructor(
-    protected readonly logger: Logger,
-    private readonly email: Email,
-  ) {
+  public constructor(protected readonly logger: Logger, private readonly email: Email) {
     super()
   }
 
@@ -32,7 +29,7 @@ export class EmailConsumer extends WorkerHost {
   }
 
   private async getHtmlTemplate(template: string, data: any): Promise<string> {
-    const templatePath = resolve(__dirname, '..', 'templates', `${template}.template.tsx`)
+    const templatePath = resolve(__dirname, "..", "templates", `${template}.template.tsx`)
     const { default: Template } = await import(templatePath)
 
     if (!Template) {

@@ -12,38 +12,38 @@ import cookieParser from "cookie-parser"
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
-    bodyParser: false
+    bodyParser: false,
   })
 
   const logger = await app.resolve<Logger>(LOGGER)
   const config = app.get(ConfigService)
   const httpAdapter = app.get(HttpAdapterHost)
-  const domain = config.get<string>('app.domain')
-  const port = config.getOrThrow<number>('app.port')
+  const domain = config.get<string>("app.domain")
+  const port = config.getOrThrow<number>("app.port")
 
-  app.use(json({ limit: '10mb', type: ['application/json'] }))
+  app.use(json({ limit: "10mb", type: ["application/json"] }))
 
   app.use(
     cors({
-      origin: config.get<string>('client.web.url'),
+      origin: config.get<string>("client.web.url"),
       credentials: true,
     }),
   )
   app.use(cookieParser())
   app.useLogger(logger)
   app.useGlobalFilters(new AllExceptionFilter(httpAdapter), new ZodExceptionFilter())
-  app.setGlobalPrefix('api')
+  app.setGlobalPrefix("api")
 
-  app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' })
+  app.enableVersioning({ type: VersioningType.URI, defaultVersion: "1" })
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('OurTransfer API')
-    .setDescription('API documentation for OurTransfer')
-    .setVersion('1.0')
+    .setTitle("OurTransfer API")
+    .setDescription("API documentation for OurTransfer")
+    .setVersion("1.0")
     .build()
   const document = SwaggerModule.createDocument(app, swaggerConfig)
 
-  SwaggerModule.setup('api', app, document)
+  SwaggerModule.setup("api", app, document)
 
   await app.listen(port, () => {
     logger.info(`Server is running at http://${domain}:${port}/api`)

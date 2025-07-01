@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react"
 import {
   Body,
   Container,
@@ -12,7 +12,7 @@ import {
   Font,
   Button,
   Hr,
-} from '@react-email/components'
+} from "@react-email/components"
 
 export interface PasswordResetTemplateProps {
   setPasswordUrl: string
@@ -26,8 +26,8 @@ function PasswordResetTemplate(props: PasswordResetTemplateProps) {
           fontFamily="Roboto"
           fallbackFontFamily="Verdana"
           webFont={{
-            url: 'https://fonts.gstatic.com/s/roboto/v27/KFOmCnqEu92Fr1Mu4mxKKTU1Kg.woff2',
-            format: 'woff2',
+            url: "https://fonts.gstatic.com/s/roboto/v27/KFOmCnqEu92Fr1Mu4mxKKTU1Kg.woff2",
+            format: "woff2",
           }}
           fontWeight={400}
           fontStyle="normal"
@@ -48,7 +48,7 @@ function PasswordResetTemplate(props: PasswordResetTemplateProps) {
               </Text>
               <Button
                 className="bg-indigo-600 h-12 cursor-pointer text-white w-full max-w-xs mx-auto rounded-lg"
-                style={{ lineHeight: '48px' }}
+                style={{ lineHeight: "48px" }}
                 href={props.setPasswordUrl}
               >
                 Reset Password
@@ -64,7 +64,7 @@ function PasswordResetTemplate(props: PasswordResetTemplateProps) {
               <Text className="text-xs my-2">Ngawi, East Java, 6969, Indonesia</Text>
               <Text className="text-xs my-2">Phone: +62 21 555 0123</Text>
               <Text className="mt-2 text-xs">
-                If you have any questions, please{' '}
+                If you have any questions, please{" "}
                 <a href="mailto:support@ourtransfer.com" className="text-indigo-600 underline">
                   contact us
                 </a>

@@ -1,6 +1,6 @@
-import { Injectable, Inject } from '@nestjs/common'
-import { Logger, LOGGER } from '../../common/interfaces/logger/logger.interface'
-import { Logger as ITypeOrmLogger, QueryRunner } from 'typeorm'
+import { Injectable, Inject } from "@nestjs/common"
+import { Logger, LOGGER } from "../../common/interfaces/logger/logger.interface"
+import { Logger as ITypeOrmLogger, QueryRunner } from "typeorm"
 
 @Injectable()
 export class TypeOrmLogger implements ITypeOrmLogger {
@@ -26,7 +26,7 @@ export class TypeOrmLogger implements ITypeOrmLogger {
     this.logger.log(`Migration: ${message}`)
   }
 
-  public log(level: 'log' | 'info' | 'warn', message: any, queryRunner?: QueryRunner) {
+  public log(level: "log" | "info" | "warn", message: any, queryRunner?: QueryRunner) {
     this.logger[level](message)
   }
 }

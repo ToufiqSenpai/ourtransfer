@@ -18,7 +18,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@ourtransfer/configs": ["libs/configs/src/index.ts"]
+      "@ourtransfer/common": ["libs/common/src/index.ts"],
+      "@ourtransfer/dto": ["libs/dto/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

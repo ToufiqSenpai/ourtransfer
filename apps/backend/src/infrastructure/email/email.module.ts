@@ -1,16 +1,16 @@
-import { Global, Module } from '@nestjs/common'
-import { EMAIL } from '../../common/interfaces/email/email.interface'
-import { ResendEmail } from './resend.email'
-import { Resend } from 'resend'
-import { SecretManager } from '../../common/abstracts/secrets/secret-manager.abstract'
-import { BullModule } from '@nestjs/bullmq'
-import { EmailConsumer } from './consumers/email.consumer'
+import { Global, Module } from "@nestjs/common"
+import { EMAIL } from "../../common/interfaces/email/email.interface"
+import { ResendEmail } from "./resend.email"
+import { Resend } from "resend"
+import { SecretManager } from "../../common/abstracts/secrets/secret-manager.abstract"
+import { BullModule } from "@nestjs/bullmq"
+import { EmailConsumer } from "./consumers/email.consumer"
 
 @Global()
 @Module({
   imports: [
     BullModule.registerQueue({
-      name: 'email',
+      name: "email",
     }),
   ],
   providers: [
@@ -21,7 +21,7 @@ import { EmailConsumer } from './consumers/email.consumer'
     {
       provide: Resend,
       async useFactory(secretManager: SecretManager): Promise<Resend> {
-        const apiKey = await secretManager.getOrThrow('RESEND_API_KEY')
+        const apiKey = await secretManager.getOrThrow("RESEND_API_KEY")
         return new Resend(apiKey)
       },
       inject: [SecretManager],

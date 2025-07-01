@@ -1,4 +1,4 @@
-export const JWT = Symbol('JWT')
+export const JWT = Symbol("JWT")
 
 export interface Jwt {
   sign(userId: string): Promise<string>

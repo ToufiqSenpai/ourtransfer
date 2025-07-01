@@ -1,15 +1,15 @@
-import { Global, Module } from '@nestjs/common';
-import { SecretManager } from '../../common/abstracts/secret/secret-manager.abstract';
-import { EnvSecretManager } from './env.secret-manager';
+import { Global, Module } from "@nestjs/common"
+import { SecretManager } from "../../common/abstracts/secret/secret-manager.abstract"
+import { EnvSecretManager } from "./env.secret-manager"
 
 @Global()
 @Module({
   providers: [
     {
       provide: SecretManager,
-      useClass: EnvSecretManager
-    }
+      useClass: EnvSecretManager,
+    },
   ],
-  exports: [SecretManager]
+  exports: [SecretManager],
 })
 export class SecretModule {}

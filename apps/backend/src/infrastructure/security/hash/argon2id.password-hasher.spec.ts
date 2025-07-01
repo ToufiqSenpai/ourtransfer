@@ -1,25 +1,25 @@
-import { Argon2idPasswordHasher } from './argon2id.password-hasher'
-import { Algorithm, hash, verify } from '@node-rs/argon2'
+import { Argon2idPasswordHasher } from "./argon2id.password-hasher"
+import { Algorithm, hash, verify } from "@node-rs/argon2"
 
-jest.mock('@node-rs/argon2', () => ({
+jest.mock("@node-rs/argon2", () => ({
   hash: jest.fn(),
   verify: jest.fn(),
   Algorithm: {
-    Argon2id: 'Argon2id',
+    Argon2id: "Argon2id",
   },
 }))
 
-describe('Argon2idPasswordHasher', () => {
+describe("Argon2idPasswordHasher", () => {
   let passwordHasher: Argon2idPasswordHasher
 
   beforeEach(() => {
     passwordHasher = new Argon2idPasswordHasher()
   })
 
-  describe('hash', () => {
-    it('should hash the password with the correct options', async () => {
-      const password = 'testPassword'
-      const hashedPassword = 'hashedPassword123'
+  describe("hash", () => {
+    it("should hash the password with the correct options", async () => {
+      const password = "testPassword"
+      const hashedPassword = "hashedPassword123"
 
       ;(hash as jest.Mock).mockResolvedValue(hashedPassword)
 
@@ -36,10 +36,10 @@ describe('Argon2idPasswordHasher', () => {
     })
   })
 
-  describe('compare', () => {
-    it('should return true if the password matches the hashed password', async () => {
-      const password = 'testPassword'
-      const hashedPassword = 'hashedPassword123'
+  describe("compare", () => {
+    it("should return true if the password matches the hashed password", async () => {
+      const password = "testPassword"
+      const hashedPassword = "hashedPassword123"
 
       ;(verify as jest.Mock).mockResolvedValue(true)
 
@@ -51,9 +51,9 @@ describe('Argon2idPasswordHasher', () => {
       expect(result).toBe(true)
     })
 
-    it('should return false if the password does not match the hashed password', async () => {
-      const password = 'testPassword'
-      const hashedPassword = 'hashedPassword123'
+    it("should return false if the password does not match the hashed password", async () => {
+      const password = "testPassword"
+      const hashedPassword = "hashedPassword123"
 
       ;(verify as jest.Mock).mockResolvedValue(false)
 

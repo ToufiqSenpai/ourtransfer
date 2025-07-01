@@ -1,5 +1,5 @@
-import { Hasher } from './hasher.interface'
+import { Hasher } from "./hasher.interface"
 
-export const PASSWORD_HASHER = Symbol('PasswordHasher')
+export const PASSWORD_HASHER = Symbol("PasswordHasher")
 
 export type PasswordHasher = Hasher

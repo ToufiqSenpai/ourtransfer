@@ -1,5 +1,5 @@
-import { Catch, ExceptionFilter, ArgumentsHost } from '@nestjs/common'
-import { ZodError } from 'zod'
+import { Catch, ExceptionFilter, ArgumentsHost } from "@nestjs/common"
+import { ZodError } from "zod"
 
 @Catch(ZodError)
 export class ZodExceptionFilter implements ExceptionFilter {
@@ -8,7 +8,7 @@ export class ZodExceptionFilter implements ExceptionFilter {
     const res = context.getResponse()
 
     res.status(400).json({
-      message: 'Bad Request.',
+      message: "Bad Request.",
       errors: exception.formErrors.fieldErrors,
     })
   }

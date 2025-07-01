@@ -1,13 +1,13 @@
-import { HttpStatus, Inject, Injectable } from '@nestjs/common'
-import { ContainerClient } from '@azure/storage-blob'
+import { HttpStatus, Inject, Injectable } from "@nestjs/common"
+import { ContainerClient } from "@azure/storage-blob"
 import {
   FileHeaders,
   FileMetadata,
   FileProperties,
   FileStorage,
-} from '../../common/interfaces/storage/file-storage.interface'
-import { Readable } from 'stream'
-import { Logger, LOGGER } from '../../common/interfaces/logger/logger.interface'
+} from "../../common/interfaces/storage/file-storage.interface"
+import { Readable } from "stream"
+import { Logger, LOGGER } from "../../common/interfaces/logger/logger.interface"
 
 @Injectable()
 export class AzureBlobStorage implements FileStorage {
@@ -17,7 +17,7 @@ export class AzureBlobStorage implements FileStorage {
   ) {}
 
   public initiateMultipartUpload(filePath: string, headers?: FileHeaders, metadata?: FileMetadata): Promise<void> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 
   public uploadFilePart(
@@ -26,15 +26,15 @@ export class AzureBlobStorage implements FileStorage {
     fileStream: Readable,
     abortSignal?: AbortSignal,
   ): Promise<void> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 
   public completeMultipartUpload(filePath: string): Promise<boolean> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 
   public abortMultipartUpload(filePath: string): Promise<boolean> {
-    throw new Error('Method not implemented.')
+    throw new Error("Method not implemented.")
   }
 
   public async uploadFile(
@@ -71,7 +71,7 @@ export class AzureBlobStorage implements FileStorage {
     try {
       const downloadResponse = await blockBlobClient.download(0)
 
-      return (downloadResponse.readableStreamBody as Readable) ?? null
+      return downloadResponse.readableStreamBody as Readable
     } catch (error) {
       this.logger.error(`Failed to download file from Azure Blob Storage at path: ${filePath}`, error)
       return null

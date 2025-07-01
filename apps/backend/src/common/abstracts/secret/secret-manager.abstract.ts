@@ -1,4 +1,4 @@
-import { SecretNotFoundException } from '../../exceptions/secret-not-found.exception'
+import { SecretNotFoundException } from "../../exceptions/secret-not-found.exception"
 
 export abstract class SecretManager {
   public abstract get(key: string): Promise<string | null>

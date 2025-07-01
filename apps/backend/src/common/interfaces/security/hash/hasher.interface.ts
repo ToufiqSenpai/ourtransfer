@@ -1,4 +1,4 @@
-export const HASHER = Symbol('Hasher')
+export const HASHER = Symbol("Hasher")
 
 export interface Hasher {
   hash(text: string): Promise<string>
