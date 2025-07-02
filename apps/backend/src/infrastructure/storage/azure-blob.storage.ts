@@ -71,7 +71,7 @@ export class AzureBlobStorage implements FileStorage {
     try {
       const downloadResponse = await blockBlobClient.download(0)
 
-      return (downloadResponse.readableStreamBody as Readable) ?? null
+      return downloadResponse.readableStreamBody as Readable
     } catch (error) {
       this.logger.error(`Failed to download file from Azure Blob Storage at path: ${filePath}`, error)
       return null

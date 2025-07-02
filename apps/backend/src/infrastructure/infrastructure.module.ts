@@ -3,9 +3,10 @@ import { ConfigModule } from './config/config.module';
 import { LoggerModule } from './logger/logger.module';
 import { SecretModule } from './secret/secret.module';
 import { DatabaseModule } from './database/database.module';
+import { SecurityModule } from "./security/security.module"
 
 @Global()
 @Module({
-  imports: [ConfigModule, DatabaseModule, LoggerModule, SecretModule]
+  imports: [ConfigModule, DatabaseModule, LoggerModule, SecretModule, SecurityModule]
 })
 export class InfrastructureModule {}

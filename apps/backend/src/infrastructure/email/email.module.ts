@@ -2,7 +2,7 @@ import { Global, Module } from '@nestjs/common'
 import { EMAIL } from '../../common/interfaces/email/email.interface'
 import { ResendEmail } from './resend.email'
 import { Resend } from 'resend'
-import { SecretManager } from '../../common/abstracts/secrets/secret-manager.abstract'
+import { SecretManager } from '../../common/abstracts/secret/secret-manager.abstract'
 import { BullModule } from '@nestjs/bullmq'
 import { EmailConsumer } from './consumers/email.consumer'
 

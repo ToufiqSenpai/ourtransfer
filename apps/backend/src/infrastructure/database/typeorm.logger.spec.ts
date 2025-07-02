@@ -69,7 +69,7 @@ describe('TypeOrmLogger', () => {
     it('should call logger.warn with the formatted time, query, and parameters', () => {
       const time = 150
       const query = 'SELECT pg_sleep(0.15)'
-      const parameters = []
+      const parameters: any[] = []
       typeOrmLogger.logQuerySlow(time, query, parameters, mockQueryRunner)
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `Slow Query (${time}ms): ${query} -- Params: ${JSON.stringify(parameters)}`,
