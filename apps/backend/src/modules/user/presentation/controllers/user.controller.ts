@@ -7,8 +7,9 @@ import {
   ApiUnauthorizedResponse,
   ApiBadRequestResponse,
   ApiNoContentResponse,
-  ApiPayloadTooLargeResponse, ApiQuery
-} from '@nestjs/swagger';
+  ApiPayloadTooLargeResponse,
+  ApiQuery,
+} from "@nestjs/swagger"
 
 @Controller({ path: "/users", version: "1" })
 export class UserController {

@@ -1,8 +1,8 @@
-import { AutoMap } from '@automapper/classes'
-import { CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
+import { AutoMap } from "@automapper/classes"
+import { CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm"
 
 export class BaseEntity {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   @AutoMap()
   public id!: string
 

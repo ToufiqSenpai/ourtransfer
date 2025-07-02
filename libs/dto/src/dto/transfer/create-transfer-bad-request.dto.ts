@@ -1,4 +1,4 @@
-import { BaseBadRequestDto } from '../common/base-bad-request.dto';
+import { BaseBadRequestDto } from "../common/base-bad-request.dto"
 import { ApiProperty } from "@nestjs/swagger"
 
 class CreateTransferBadRequestErrors {
