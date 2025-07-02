@@ -1,8 +1,9 @@
 import { EnvSecretManager } from './env.secret-manager'
-import { SecretNotFoundException } from '../../shared/exceptions/secret-not-found.exception' // Adjusted path
+import { SecretNotFoundException } from '../../common/exceptions/secret-not-found.exception' // Adjusted path
 
 describe('EnvSecretManager', () => {
   let secretManager: EnvSecretManager
+  // eslint-disable-next-line no-undef
   let originalEnv: NodeJS.ProcessEnv
 
   beforeEach(() => {
