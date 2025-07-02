@@ -1,0 +1,41 @@
+{
+  "app": {
+    "port": 8081,
+    "domain": "127.0.0.1:8080"
+  },
+  "email": {
+    "from": "noreply@ourtransfer.com"
+  },
+  "logger": {
+    "level": "debug",
+    "file": {
+      "enabled": true,
+      "outputPath": "application.log"
+    }
+  },
+  "database": {
+    "type": "postgres",
+    "ssl": false
+  },
+  "refreshToken": {
+    "expiresIn": "30d",
+    "bytesLength": 64
+  },
+  "passwordResetSession": {
+    "expiresIn": "15m",
+    "bytesLength": 64
+  },
+  "password": {
+    "argon2": {
+      "memoryCost": 8192,
+      "iterations": 3,
+      "parallelism": 2,
+      "hashLength": 32
+    }
+  },
+  "client": {
+    "web": {
+      "url": "http://locahost:4000"
+    }
+  }
+}

@@ -7,7 +7,8 @@ export class Sha256TextHasher implements TextHasher {
     return Promise.resolve(hashedText)
   }
 
-  public compare(text: string, hashedText: string): Promise<boolean> {
-    return this.hash(text).then(hashed => hashed === hashedText)
+  public async compare(text: string, hashedText: string): Promise<boolean> {
+    const hashed = await this.hash(text)
+    return hashed === hashedText
   }
 }

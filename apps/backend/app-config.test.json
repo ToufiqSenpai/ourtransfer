@@ -1,0 +1,8 @@
+{
+  "logger": {
+    "level": "info",
+    "file": {
+      "enabled": false
+    }
+  }
+}

@@ -1,15 +1,18 @@
-import { PasswordHasher } from "../../../common/interfaces/security/hash/password-hasher.interface"
-import { Injectable } from "@nestjs/common"
-import { Algorithm, hash, verify } from "@node-rs/argon2"
+import { PasswordHasher } from '../../../common/interfaces/security/hash/password-hasher.interface'
+import { Injectable } from '@nestjs/common'
+import { Algorithm, hash, verify } from '@node-rs/argon2'
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class Argon2idPasswordHasher implements PasswordHasher {
+  public constructor(private readonly config: ConfigService) {}
+
   public async hash(password: string): Promise<string> {
     return await hash(password, {
-      memoryCost: 8 * 1024,
-      timeCost: 4,
-      parallelism: 2,
-      outputLen: 32,
+      memoryCost: this.config.get('password.argon2.memoryCost'),
+      timeCost: this.config.get('password.argon2.iterations'),
+      parallelism: this.config.get('password.argon2.parallelism'),
+      outputLen: this.config.get('password.argon2.hashLength'),
       algorithm: Algorithm.Argon2id,
     })
   }

@@ -87,6 +87,7 @@
     "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.18",
     "@types/jest": "^29.5.12",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/lodash": "^4.17.17",
     "@types/node": "18.16.9",
     "@types/react": "^19.1.6",
