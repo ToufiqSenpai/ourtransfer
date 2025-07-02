@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger"
-import { AuthProvider } from "../../../../../../project-transfer/backend/src/modules/auth/domain/enums/auth-provider.enum"
+import { AuthProvider } from "@ourtransfer/common"
 
 export class GetLoginProviderResponseDto {
   @ApiProperty({
@@ -7,5 +7,5 @@ export class GetLoginProviderResponseDto {
     description: "The authentication provider used by the user.",
     example: AuthProvider.GOOGLE,
   })
-  public provider: AuthProvider
+  public provider!: AuthProvider
 }

@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Post, HttpCode, HttpStatus } from "@nestjs/common"
+import { CommandBus } from '@nestjs/cqrs';
 import {
   ApiBadRequestResponse,
   ApiOkResponse,
@@ -23,9 +24,13 @@ import {
   PasswordResetBadRequestDto,
   VerifyPasswordResetBadRequestDto,
 } from "@ourtransfer/dto"
+import { SignupValidationPipe } from '../pipes/signup-validation.pipe';
+import { SignupCommand } from '../../application/commands/signup.command';
 
 @Controller({ version: "1", path: "/auth" })
 export class AuthController {
+  public constructor(private readonly commandBus: CommandBus) {}
+
   @Post("/login-provider")
   @ApiOperation({
     summary: "Get login provider by email",
@@ -94,7 +99,9 @@ export class AuthController {
     type: SignupBadRequestDto,
     description: "The request body is invalid or a user with the given email address already exists.",
   })
-  public async signup(@Body() dto: SignupDto): Promise<CommonResponseDto> {}
+  public async signup(@Body(SignupValidationPipe) dto: SignupDto): Promise<CommonResponseDto> {
+    return this.commandBus.execute(new SignupCommand(dto))
+  }
 
   @Post("/login")
   @ApiOperation({
