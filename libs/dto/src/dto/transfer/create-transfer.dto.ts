@@ -22,12 +22,12 @@ export class CreateTransferDto {
   public message?: string
 
   @ApiProperty({
-    description: "A list of emails to send the transfer to",
+    description: "A list of recipients emails to send the transfer to",
     required: false,
     default: [],
     example: ["johndoe@example.com"],
   })
-  public emailTo?: string[] = []
+  public recipients?: string[] = []
 
   @ApiProperty({
     description:

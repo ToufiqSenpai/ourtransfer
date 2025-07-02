@@ -1,9 +1,30 @@
 import { BaseBadRequestDto } from '../common/base-bad-request.dto';
+import { ApiProperty } from "@nestjs/swagger"
 
 class CreateTransferBadRequestErrors {
-  public title: string[]
-  public message: string[]
-  public emailTo: string[]
+  @ApiProperty({ type: [String] })
+  public title?: string[]
+
+  @ApiProperty({ type: [String] })
+  public message?: string[]
+
+  @ApiProperty({ type: [String] })
+  public recipients?: string[]
+
+  @ApiProperty({ type: [String] })
+  public verification?: string[]
+
+  @ApiProperty({ type: [String] })
+  public password?: string[]
+
+  @ApiProperty({ type: [String] })
+  public expiresAt?: string[]
+
+  @ApiProperty({ type: [String] })
+  public recoverable?: string[]
+
+  @ApiProperty({ type: [String] })
+  public files?: string[][]
 }
 
 export class CreateTransferBadRequestDto extends BaseBadRequestDto<CreateTransferBadRequestErrors> {

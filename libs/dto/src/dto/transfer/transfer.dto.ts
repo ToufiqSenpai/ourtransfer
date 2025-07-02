@@ -4,11 +4,14 @@ import { UserDto } from "../user/user.dto"
 export class TransferDto {
   public title!: string
   public message!: string
-  public emailTo!: string[]
+  public recipients!: string[]
   public verification!: TransferVerification
   public recoverable!: boolean
   public status!: TransferStatus
-  public author!: UserDto
+  public totalDownloads!: number
+  public creator!: UserDto
+  public passwordProtected!: boolean
+  public requester!: UserDto
   public expiresAt!: Date
   public createdAt!: Date
   public updatedAt!: Date
