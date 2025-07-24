@@ -10,7 +10,7 @@ import { plainToInstance } from "class-transformer"
 export const EMAIL_QUEUE = "email"
 
 export class EmailConsumerData<D = Record<string, any>> {
-  public to: string
+  public to!: string
   public subject?: string = "Default Subject"
   public text?: string = ""
   public htmlData?: D

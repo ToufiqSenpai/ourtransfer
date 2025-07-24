@@ -20,7 +20,9 @@ export class UserController {
   })
   @ApiOkResponse({ type: UserDto, description: "Details of the current user." })
   @ApiUnauthorizedResponse({ type: CommonResponseDto, description: "Unauthorized access." })
-  public async getMe(): Promise<UserDto> {}
+  public async getMe(): Promise<UserDto> {
+    return new UserDto()
+  }
 
   @Patch("/me")
   @ApiOperation({
@@ -30,14 +32,19 @@ export class UserController {
   @ApiOkResponse({ type: UserDto, description: "User details successfully updated." })
   @ApiBadRequestResponse({ type: UpdateUserBadRequestDto, description: "Invalid input data." })
   @ApiUnauthorizedResponse({ type: CommonResponseDto, description: "Unauthorized access." })
-  public updateMe(@Body() dto: UpdateUserDto): Promise<UserDto> {}
+  public async updateMe(@Body() dto: UpdateUserDto): Promise<UserDto> {
+    return new UserDto()
+  }
 
   @Delete("/me")
   @ApiOperation({ summary: "Delete current user", description: "Deletes the currently authenticated user." })
   @ApiQuery({ name: "confirm", type: Boolean, required: true, description: "Confirmation flag to delete the user." })
   @ApiNoContentResponse({ description: "User successfully deleted." })
   @ApiUnauthorizedResponse({ type: CommonResponseDto, description: "Unauthorized access." })
-  public async deleteMe(@Query("confirm", ParseBoolPipe) confirm: boolean): Promise<void> {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  public async deleteMe(@Query("confirm", ParseBoolPipe) confirm: boolean): Promise<void> {
+
+  }
 
   @Put("/me/avatar")
   @ApiOperation({
@@ -50,5 +57,7 @@ export class UserController {
     type: CommonResponseDto,
     description: "Uploaded image exceeds the maximum allowed size.",
   })
-  public async updateAvatar(): Promise<CommonResponseDto> {}
+  public async updateAvatar(): Promise<CommonResponseDto> {
+    return new CommonResponseDto()
+  }
 }

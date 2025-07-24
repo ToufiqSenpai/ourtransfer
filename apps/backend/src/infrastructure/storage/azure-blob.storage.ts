@@ -106,4 +106,8 @@ export class AzureBlobStorage implements FileStorage {
 
     return (res._response.status as HttpStatus) == HttpStatus.NO_CONTENT
   }
+
+  public async getPresignedUrl(): Promise<string> {
+    throw new Error("Method not implemented.")
+  }
 }

@@ -19,7 +19,6 @@ describe("ZodExceptionFilter", () => {
     }
     host = mock<ArgumentsHost>()
     host.switchToHttp.mockReturnValue({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       getResponse: () => response,
     } as any)
   })
@@ -50,7 +49,6 @@ describe("ZodExceptionFilter", () => {
   it("should send 400 with empty errors object if fieldErrors is empty", () => {
     const fieldErrors = {}
     const zodError = mock<ZodError>()
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     zodError.formErrors = { fieldErrors, formErrors: [] }
 
@@ -67,7 +65,6 @@ describe("ZodExceptionFilter", () => {
     // This case tests how the filter behaves if formErrors.fieldErrors is unexpectedly undefined.
     // ZodError's structure typically ensures formErrors and fieldErrors are present.
     const zodError = mock<ZodError>()
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     zodError.formErrors = { fieldErrors: undefined, formErrors: [] }
 

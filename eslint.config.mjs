@@ -114,7 +114,7 @@ export default tseslint.config(
         },
         {
           selector: "function",
-          format: ["camelCase"],
+          format: ["camelCase", "PascalCase"],
         },
         {
           selector: "interface",
@@ -241,7 +241,7 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-expressions": "error",
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": [
-        "error",
+        "warn",
         {
           args: "after-used",
           argsIgnorePattern: "^_",

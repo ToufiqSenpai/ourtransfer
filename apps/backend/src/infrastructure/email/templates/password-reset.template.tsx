@@ -18,7 +18,7 @@ export interface PasswordResetTemplateProps {
   setPasswordUrl: string
 }
 
-function PasswordResetTemplate(props: PasswordResetTemplateProps) {
+function PasswordResetTemplate(props: PasswordResetTemplateProps): React.JSX.Element {
   return (
     <Html>
       <Head>

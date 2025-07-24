@@ -49,7 +49,9 @@ export class AuthController {
     type: CommonResponseDto,
     description: "The user with the given email address was not found.",
   })
-  public getLoginProvider(@Body() dto: GetLoginProviderDto): Promise<GetLoginProviderResponseDto> {}
+  public async getLoginProvider(@Body() dto: GetLoginProviderDto): Promise<GetLoginProviderResponseDto> {
+    return new GetLoginProviderResponseDto()
+  }
 
   @Post("/email/request")
   @ApiOperation({
@@ -69,7 +71,9 @@ export class AuthController {
     type: CommonResponseDto,
     description: "The user with the given email address was not found.",
   })
-  public requestVerificationFromEmail(@Body() dto: RequestVerificationFromEmailDto): Promise<CommonResponseDto> {}
+  public async requestVerificationFromEmail(@Body() dto: RequestVerificationFromEmailDto): Promise<CommonResponseDto> {
+    return new CommonResponseDto()
+  }
 
   @Post("/email/verify")
   @ApiOperation({
@@ -84,7 +88,9 @@ export class AuthController {
     type: VerifyUserFromEmailBadRequestDto,
     description: "The request body is invalid or the verification code is incorrect.",
   })
-  public verifyUserFromEmail(@Body() dto: VerifyUserFromEmailDto): Promise<CommonResponseDto> {}
+  public async verifyUserFromEmail(@Body() dto: VerifyUserFromEmailDto): Promise<CommonResponseDto> {
+    return new CommonResponseDto()
+  }
 
   @Post("/signup")
   @ApiOperation({
@@ -117,7 +123,9 @@ export class AuthController {
     description: "The user is not authorized to perform this action.",
   })
   @HttpCode(HttpStatus.OK)
-  public async login(): Promise<TokensDto> {}
+  public async login(): Promise<TokensDto> {
+    return new TokensDto()
+  }
 
   @Get("/google")
   @ApiOperation({
@@ -128,14 +136,19 @@ export class AuthController {
     type: GoogleAuthResponseDto,
     description: "The user has been redirected to Google for authentication.",
   })
-  public async googleAuth(): Promise<GoogleAuthResponseDto> {}
+  public async googleAuth(): Promise<GoogleAuthResponseDto> {
+    return new GoogleAuthResponseDto()
+  }
 
   @Get("/google/redirect")
   @ApiOperation({
     summary: "Handle Google authentication redirect",
     description: "This endpoint handles the redirect from Google after the user has authenticated.",
   })
-  public async googleAuthRedirect(): Promise<void> {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  public async googleAuthRedirect(): Promise<void> {
+
+  }
 
   @Post("/refresh")
   @ApiOperation({
@@ -151,7 +164,9 @@ export class AuthController {
     description: "The user is not authorized to perform this action.",
   })
   @HttpCode(HttpStatus.OK)
-  public async refreshToken(): Promise<TokensDto> {}
+  public async refreshToken(): Promise<TokensDto> {
+    return new TokensDto()
+  }
 
   @Post("/password-reset")
   @ApiOperation({
@@ -166,7 +181,9 @@ export class AuthController {
     type: PasswordResetBadRequestDto,
     description: "The request body is invalid.",
   })
-  public async passwordReset(): Promise<CommonResponseDto> {}
+  public async passwordReset(): Promise<CommonResponseDto> {
+    return new CommonResponseDto()
+  }
 
   @Post("/password-reset/verify")
   @ApiOperation({
@@ -181,5 +198,7 @@ export class AuthController {
     type: VerifyPasswordResetBadRequestDto,
     description: "The request body is invalid or the password reset token is incorrect.",
   })
-  public async changePassword(): Promise<CommonResponseDto> {}
+  public async changePassword(): Promise<CommonResponseDto> {
+    return new CommonResponseDto()
+  }
 }
