@@ -1,5 +1,5 @@
 import { Column, Entity } from 'typeorm'
-import { BaseEntity } from '../../../../common/base/base.entity'
+import { BaseEntity } from '../../../common/base/base.entity'
 import { AutoMap } from '@automapper/classes'
 
 @Entity()

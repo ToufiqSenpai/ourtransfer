@@ -1,6 +1,6 @@
 import { Column, Entity, ManyToOne, TableInheritance } from 'typeorm';
-import { BaseEntity } from '../../../../common/base/base.entity';
-import { User } from '../../../user/domain/entities/user.entity';
+import { BaseEntity } from '../../../common/base/base.entity';
+import { User } from '../../user/entities/user.entity';
 import { AuthProvider } from '@ourtransfer/common';
 
 @Entity({ name: "identities" })

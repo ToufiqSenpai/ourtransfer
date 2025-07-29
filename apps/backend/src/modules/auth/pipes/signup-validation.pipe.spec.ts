@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing'
 import { SignupValidationPipe } from './signup-validation.pipe'
-import { USER_REPOSITORY, UserRepository } from '../../../user/domain/repositories/user.repository'
+import { UserRepository } from '../../user/repositories/user.repository'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { ZodError } from 'zod'
 import { SignupDto } from '@ourtransfer/dto'
@@ -15,14 +15,14 @@ describe('SignupValidationPipe', () => {
       providers: [
         SignupValidationPipe,
         {
-          provide: USER_REPOSITORY,
+          provide: UserRepository,
           useValue: mock<UserRepository>(),
         },
       ],
     }).compile()
 
     pipe = module.get(SignupValidationPipe)
-    userRepository = module.get(USER_REPOSITORY)
+    userRepository = module.get(UserRepository)
   })
 
   it('should be defined', () => {

@@ -1,0 +1,9 @@
+import { PasswordIdentity } from '../entities/password-identity.entity';
+import { Repository } from "typeorm"
+import { InjectDataSource } from '@nestjs/typeorm';
+
+export class PasswordIdentityRepository extends Repository<PasswordIdentity> {
+  public constructor(@InjectDataSource() private readonly dataSource: Repository<PasswordIdentity>) {
+    super(PasswordIdentity, dataSource.manager)
+  }
+}
