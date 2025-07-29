@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Post } from "@nestjs/common"
+import { Body, Controller, Delete, Get, Post } from "@nestjs/common"
 import {
   ApiBadRequestResponse,
   ApiNoContentResponse,
@@ -6,7 +6,7 @@ import {
   ApiOkResponse,
   ApiOperation,
 } from "@nestjs/swagger"
-import { CommonResponseDto, CreateTransferBadRequestDto, TransferDto } from "@ourtransfer/dto"
+import { CommonResponseDto, CreateTransferBadRequestDto, CreateTransferDto, TransferDto } from "@ourtransfer/dto"
 
 @Controller("/transfers")
 export class TransferController {
@@ -14,7 +14,7 @@ export class TransferController {
   @ApiOperation({})
   @ApiOkResponse({ type: TransferDto })
   @ApiBadRequestResponse({ type: CreateTransferBadRequestDto })
-  public async createTransfer(): Promise<TransferDto> {
+  public async createTransfer(@Body() body: CreateTransferDto): Promise<TransferDto> {
     return new TransferDto()
   }
 

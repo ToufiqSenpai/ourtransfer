@@ -30,8 +30,7 @@ export class CreateTransferDto {
   public recipients?: string[] = []
 
   @ApiProperty({
-    description:
-      "The verification type for the transfer. If the verification is set to tracked, a user must be verified to download this file.",
+    description: "The verification type for the transfer.",
     default: TransferVerification.ANONYMOUS,
     enum: TransferVerification,
     required: false,
