@@ -25,7 +25,7 @@ import {
   VerifyPasswordResetBadRequestDto,
 } from "@ourtransfer/dto"
 import { SignupValidationPipe } from '../pipes/signup-validation.pipe';
-import { SignupCommand } from '../../commands/signup.command';
+import { SignupCommand } from '../commands/signup.command';
 
 @Controller({ version: "1", path: "/auth" })
 export class AuthController {

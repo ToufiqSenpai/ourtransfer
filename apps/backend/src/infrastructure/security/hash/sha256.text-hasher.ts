@@ -1,4 +1,4 @@
-import { TextHasher } from "../../../common/interfaces/security/hash/text-hasher.interface"
+import { TextHasher } from "./text-hasher.interface"
 import { createHash } from "crypto"
 
 export class Sha256TextHasher implements TextHasher {

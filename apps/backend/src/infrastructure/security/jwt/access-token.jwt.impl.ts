@@ -1,7 +1,7 @@
 import { sign, verify } from 'jsonwebtoken'
-import { Jwt } from '../../../common/interfaces/security/jwt/jwt.interface'
+import { Jwt } from './jwt.interface'
 import { ConfigService } from '@nestjs/config'
-import { SecretManager } from '../../../common/abstracts/secret/secret-manager.abstract'
+import { SecretManager } from '../../secret/secret-manager.abstract'
 import { Injectable } from '@nestjs/common'
 
 @Injectable()

@@ -1,4 +1,4 @@
-import { Email } from "../../common/interfaces/email/email.interface"
+import { Email } from "./email.interface"
 import { Resend } from "resend"
 import { ConfigService } from "@nestjs/config"
 

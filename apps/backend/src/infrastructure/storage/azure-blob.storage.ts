@@ -5,9 +5,9 @@ import {
   FileMetadata,
   FileProperties,
   FileStorage,
-} from "../../common/interfaces/storage/file-storage.interface"
+} from "./file-storage.interface"
 import { Readable } from "stream"
-import { Logger, LOGGER } from "../../common/interfaces/logger/logger.interface"
+import { Logger, LOGGER } from "../logger/logger.interface"
 
 @Injectable()
 export class AzureBlobStorage implements FileStorage {

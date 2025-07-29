@@ -1,5 +1,5 @@
 import { Global, Module } from "@nestjs/common"
-import { SecretManager } from "../../common/abstracts/secret/secret-manager.abstract"
+import { SecretManager } from "./secret-manager.abstract"
 import { EnvSecretManager } from "./env.secret-manager"
 
 @Global()

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing"
 import { ConfigService } from "@nestjs/config"
-import { SecretManager } from "../../../common/abstracts/secret/secret-manager.abstract"
+import { SecretManager } from "../../secret/secret-manager.abstract"
 import { AccessTokenJwtImpl } from "./access-token.jwt.impl"
 import { mockDeep, DeepMockProxy } from "jest-mock-extended"
 import * as jwt from "jsonwebtoken"

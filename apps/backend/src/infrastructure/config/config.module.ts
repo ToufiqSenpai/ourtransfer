@@ -13,8 +13,8 @@ import * as _ from "lodash"
       load: [
         (): any => {
           const env = process.env.NODE_ENV || "development"
-          const defaultConfigPath = path.resolve(__dirname, "..", "..", `app-config.json`)
-          const envConfigPath = path.resolve(__dirname, "..", "..", `app-config.${env}.json`)
+          const defaultConfigPath = path.resolve(__dirname, `app-config.json`)
+          const envConfigPath = path.resolve(__dirname, `app-config.${env}.json`)
 
           let config = JSON.parse(fs.readFileSync(defaultConfigPath, "utf-8"))
 

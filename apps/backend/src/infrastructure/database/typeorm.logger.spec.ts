@@ -1,4 +1,4 @@
-import { Logger } from '../../common/interfaces/logger/logger.interface'
+import { Logger } from '../logger/logger.interface'
 import { TypeOrmLogger } from './typeorm.logger'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { QueryRunner } from 'typeorm'

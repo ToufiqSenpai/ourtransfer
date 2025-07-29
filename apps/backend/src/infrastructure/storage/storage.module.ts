@@ -1,7 +1,7 @@
 import { BlobServiceClient, ContainerClient } from "@azure/storage-blob"
 import { Global, Module } from "@nestjs/common"
-import { SecretManager } from "../../common/abstracts/secret/secret-manager.abstract"
-import { FILE_STORAGE } from "../../common/interfaces/storage/file-storage.interface"
+import { SecretManager } from "../secret/secret-manager.abstract"
+import { FILE_STORAGE } from "./file-storage.interface"
 import { AzureBlobStorage } from "./azure-blob.storage"
 
 @Global()

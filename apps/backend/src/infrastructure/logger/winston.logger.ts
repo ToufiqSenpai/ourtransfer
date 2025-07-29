@@ -1,5 +1,5 @@
 import { Inject, Injectable, Scope } from "@nestjs/common"
-import { Logger } from "../../common/interfaces/logger/logger.interface"
+import { Logger } from "./logger.interface"
 import winston, { format, transports, createLogger } from "winston"
 import { INQUIRER } from "@nestjs/core"
 import { LogLevel } from "../../common/enums/log-level.enum"

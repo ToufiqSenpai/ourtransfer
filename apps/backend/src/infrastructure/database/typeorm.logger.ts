@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common'
-import { Logger, LOGGER } from '../../common/interfaces/logger/logger.interface'
+import { Logger, LOGGER } from '../logger/logger.interface'
 import { Logger as ITypeOrmLogger, QueryRunner } from 'typeorm'
 
 @Injectable()

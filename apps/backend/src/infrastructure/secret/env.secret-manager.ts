@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { SecretManager } from '../../common/abstracts/secret/secret-manager.abstract'
+import { SecretManager } from './secret-manager.abstract'
 import { config } from 'dotenv'
 import { resolve } from 'path'
 

@@ -8,7 +8,7 @@ import { mock, MockProxy } from 'jest-mock-extended'
 import {
   PASSWORD_HASHER,
   PasswordHasher,
-} from '../../../../common/interfaces/security/hash/password-hasher.interface'
+} from '../../../../infrastructure/security/hash/password-hasher.interface'
 import {
   PasswordIdentityRepository,
 } from '../../repositories/password-identity.repository'

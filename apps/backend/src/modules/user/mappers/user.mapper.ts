@@ -3,7 +3,7 @@ import { AutomapperProfile, InjectMapper } from '@automapper/nestjs'
 import { User } from '../entities/user.entity'
 import { UserDto } from '@ourtransfer/dto'
 import { Inject } from '@nestjs/common'
-import { FILE_STORAGE, FileOperation, FileStorage } from '../../../common/interfaces/storage/file-storage.interface'
+import { FILE_STORAGE, FileOperation, FileStorage } from '../../../infrastructure/storage/file-storage.interface'
 
 export class UserMapper extends AutomapperProfile {
   public constructor(
