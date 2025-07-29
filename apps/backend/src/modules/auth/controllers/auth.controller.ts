@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, HttpCode, HttpStatus } from "@nestjs/common"
+import { Body, Controller, Get, Post, HttpCode, HttpStatus, Headers, Res } from "@nestjs/common"
 import { CommandBus } from '@nestjs/cqrs';
 import {
   ApiBadRequestResponse,
@@ -22,14 +22,20 @@ import {
   GoogleAuthResponseDto,
   TokensDto,
   PasswordResetBadRequestDto,
-  VerifyPasswordResetBadRequestDto,
+  VerifyPasswordResetBadRequestDto, LoginDto,
 } from "@ourtransfer/dto"
 import { SignupValidationPipe } from '../pipes/signup-validation.pipe';
 import { SignupCommand } from '../commands/signup.command';
+import { LoginCommand } from "../commands/login.command"
+import { IpAddress } from "../../../common/decorators/parameter/ip-address.decorator"
+import { Response, CookieOptions } from "express"
+import { REFRESH_TOKEN_COOKIE_NAME } from "../../../infrastructure/constants/cookie-name.constant"
+import { NodeEnv } from "@ourtransfer/common"
+import { ConfigService } from "@nestjs/config"
 
 @Controller({ version: "1", path: "/auth" })
 export class AuthController {
-  public constructor(private readonly commandBus: CommandBus) {}
+  public constructor(private readonly commandBus: CommandBus, private readonly config: ConfigService) {}
 
   @Post("/login-provider")
   @ApiOperation({
@@ -123,8 +129,17 @@ export class AuthController {
     description: "The user is not authorized to perform this action.",
   })
   @HttpCode(HttpStatus.OK)
-  public async login(): Promise<TokensDto> {
-    return new TokensDto()
+  public async login(
+    @Body() dto: LoginDto,
+    @Headers('User-Agent') userAgent: string,
+    @IpAddress() ipAddress: string,
+    @Res() res: Response
+  ): Promise<void> {
+    const tokens = await this.commandBus.execute(new LoginCommand(dto, userAgent, ipAddress))
+
+    res.cookie(REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken, this.getSetCookieOptions())
+
+    res.status(HttpStatus.OK).json(tokens)
   }
 
   @Get("/google")
@@ -200,5 +215,15 @@ export class AuthController {
   })
   public async changePassword(): Promise<CommonResponseDto> {
     return new CommonResponseDto()
+  }
+
+  private getSetCookieOptions(): CookieOptions {
+    return {
+      domain: this.config.get('client.web.domain'),
+      httpOnly: true,
+      maxAge: this.config.get('auth.refreshToken.expiresIn'),
+      sameSite: this.config.get('app.nodeEnv') === NodeEnv.PRODUCTION ? 'none' : 'strict',
+      secure: this.config.get('app.nodeEnv') === NodeEnv.PRODUCTION,
+    }
   }
 }

@@ -6,4 +6,11 @@ export class PasswordIdentityRepository extends Repository<PasswordIdentity> {
   public constructor(@InjectDataSource() private readonly dataSource: Repository<PasswordIdentity>) {
     super(PasswordIdentity, dataSource.manager)
   }
+
+  public async findByEmail(email: string): Promise<PasswordIdentity | null> {
+    return this.findOne({
+      where: { email },
+      relations: ['user'],
+    })
+  }
 }
