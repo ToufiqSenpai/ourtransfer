@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common'
 import { UserModule } from '../user/user.module';
 import { AuthController } from './presentation/controllers/auth.controller'
 import { SignupHandler } from './application/commands/handlers/signup.handler'
-import { PASSWORD_AUTH_REPOSITORY } from './domain/repositories/password-auth.repository'
-import { PasswordAuthRepositoryImpl } from './infrastructure/repositories/password-auth.repository.impl'
-import { AuthProfile } from './application/profiles/auth.profile'
+import { PASSWORD_IDENTITY_REPOSITORY } from './domain/repositories/password-identity.repository'
+import { PasswordIdentityRepositoryImpl } from "./infrastructure/repositories/password-identity.repository.impl"
+import { AuthMapper } from './application/mappers/auth.mapper'
 // import { REFRESH_TOKEN_REPOSITORY } from './domain/repositories/refresh-token.repository'
 // import { RefreshTokenRepositoryImpl } from './infrastructure/repositories/refresh-token.repository.impl'
 // import { REFRESH_TOKEN_SERVICE } from './application/interfaces/services/refresh-token.service'
@@ -23,16 +23,16 @@ import { AuthProfile } from './application/profiles/auth.profile'
 
     // Repositories
     {
-      provide: PASSWORD_AUTH_REPOSITORY,
-      useClass: PasswordAuthRepositoryImpl,
+      provide: PASSWORD_IDENTITY_REPOSITORY,
+      useClass: PasswordIdentityRepositoryImpl,
     },
     // {
     //   provide: REFRESH_TOKEN_REPOSITORY,
     //   useClass: RefreshTokenRepositoryImpl,
     // },
 
-    // Profiles
-    AuthProfile,
+    // Mappers
+    AuthMapper,
 
     // Services
     // {

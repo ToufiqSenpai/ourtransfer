@@ -11,4 +11,11 @@ export class User extends BaseEntity {
   @Column({ unique: true })
   @AutoMap()
   public email!: string
+
+  @Column()
+  public lastSignInAt!: Date
+
+  public updateLastSignInAt(): void {
+    this.lastSignInAt = new Date()
+  }
 }

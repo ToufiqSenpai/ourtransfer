@@ -5,5 +5,5 @@ export const USER_REPOSITORY = Symbol('UserRepository')
 
 export interface UserRepository extends BaseRepository<User, string> {
   findByEmail(email: string): Promise<User | null>
-  isExistsByEmail(email: string): Promise<boolean>
+  existsByEmail(email: string): Promise<boolean>
 }

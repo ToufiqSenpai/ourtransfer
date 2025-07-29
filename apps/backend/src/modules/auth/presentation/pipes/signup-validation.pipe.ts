@@ -19,7 +19,7 @@ export class SignupValidationPipe implements PipeTransform<object, Promise<Signu
         .min(1, { message: 'Email is required.' })
         .max(100, { message: 'Email must be less than 100 characters.' })
         .email({ message: 'Email must be a valid email address.' })
-        .refine(async email => !(await this.userRepository.isExistsByEmail(email)), {
+        .refine(async email => !(await this.userRepository.existsByEmail(email)), {
           message: 'Email already in use.',
         }),
       password: z

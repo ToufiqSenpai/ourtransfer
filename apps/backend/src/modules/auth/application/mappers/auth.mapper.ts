@@ -3,7 +3,7 @@ import { createMap, forMember, mapFrom, Mapper } from '@automapper/core'
 import { PasswordAuth } from '../../domain/entities/password-auth.entity'
 import { SignupDto } from '@ourtransfer/dto'
 
-export class AuthProfile extends AutomapperProfile {
+export class AuthMapper extends AutomapperProfile {
   public constructor(@InjectMapper() mapper: Mapper) {
     super(mapper)
   }

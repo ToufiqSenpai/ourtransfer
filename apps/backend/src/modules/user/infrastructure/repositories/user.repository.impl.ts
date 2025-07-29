@@ -36,7 +36,7 @@ export class UserRepositoryImpl implements UserRepository {
     throw new Error('Method not implemented.')
   }
 
-  public async isExistsByEmail(email: string): Promise<boolean> {
+  public async existsByEmail(email: string): Promise<boolean> {
     const userRepository = this.dataSource.getRepository(User)
     const user = await userRepository
       .createQueryBuilder('user')
