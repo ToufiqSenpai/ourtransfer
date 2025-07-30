@@ -6,7 +6,7 @@ import {
   ApiCreatedResponse,
   ApiOperation,
   ApiNotFoundResponse,
-  ApiUnauthorizedResponse,
+  ApiUnauthorizedResponse, ApiForbiddenResponse,
 } from "@nestjs/swagger"
 import {
   GetLoginProviderResponseDto,
@@ -32,6 +32,7 @@ import { Response, CookieOptions } from "express"
 import { REFRESH_TOKEN_COOKIE_NAME } from "../../../infrastructure/constants/cookie-name.constant"
 import { NodeEnv } from "@ourtransfer/common"
 import { ConfigService } from "@nestjs/config"
+import { LoginValidationPipe } from '../pipes/login-validation.pipe';
 
 @Controller({ version: "1", path: "/auth" })
 export class AuthController {
@@ -128,9 +129,13 @@ export class AuthController {
     type: CommonResponseDto,
     description: "The user is not authorized to perform this action.",
   })
+  @ApiForbiddenResponse({
+    type: CommonResponseDto,
+    description: "The user is not allowed to log in with the provided credentials.",
+  })
   @HttpCode(HttpStatus.OK)
   public async login(
-    @Body() dto: LoginDto,
+    @Body(LoginValidationPipe) dto: LoginDto,
     @Headers('User-Agent') userAgent: string,
     @IpAddress() ipAddress: string,
     @Res() res: Response
