@@ -9,7 +9,7 @@
   "logger": {
     "level": "debug",
     "file": {
-      "enabled": true,
+      "enabled": false,
       "outputPath": "application.log"
     }
   },
