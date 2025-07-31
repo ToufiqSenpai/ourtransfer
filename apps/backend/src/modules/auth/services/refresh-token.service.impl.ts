@@ -4,7 +4,7 @@ import { RefreshToken } from '../entities/refresh-token.entity'
 import { User } from '../../user/entities/user.entity'
 import { randomBytes } from 'crypto'
 import { ConfigService } from '@nestjs/config'
-import { RefreshTokenRepository } from '../repositories/refresh-token.repository'
+import { RefreshTokenRepository, REFRESH_TOKEN_REPOSITORY } from '../repositories/refresh-token.repository';
 import { TEXT_HASHER, TextHasher } from '../../../infrastructure/security/hash/text-hasher.interface'
 import { parse } from 'useragent'
 
@@ -12,8 +12,8 @@ import { parse } from 'useragent'
 export class RefreshTokenServiceImpl implements RefreshTokenService {
   public constructor(
     @Inject(TEXT_HASHER) private readonly textHasher: TextHasher,
+    @Inject(REFRESH_TOKEN_REPOSITORY) private readonly refreshTokenRepository: RefreshTokenRepository,
     private readonly config: ConfigService,
-    private readonly refreshTokenRepository: RefreshTokenRepository
   ) {}
 
   public async create(user: User, userAgent: string, ipAddress: string): Promise<RefreshToken> {

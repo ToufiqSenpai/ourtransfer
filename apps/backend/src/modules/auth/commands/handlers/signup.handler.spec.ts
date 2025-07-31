@@ -10,10 +10,11 @@ import {
   PasswordHasher,
 } from '../../../../infrastructure/security/hash/password-hasher.interface'
 import {
+  PASSWORD_IDENTITY_REPOSITORY,
   PasswordIdentityRepository,
-} from '../../repositories/password-identity.repository'
+} from "../../repositories/password-identity.repository"
 import { PasswordIdentity } from '../../entities/password-identity.entity'
-import { UserRepository } from '../../../user/repositories/user.repository'
+import { USER_REPOSITORY, UserRepository } from "../../../user/repositories/user.repository"
 import { User } from '../../../user/entities/user.entity'
 import { plainToInstance } from 'class-transformer'
 import { faker } from '@faker-js/faker'
@@ -38,11 +39,11 @@ describe('SignupHandler', () => {
           useValue: mock<PasswordHasher>(),
         },
         {
-          provide: PasswordIdentityRepository,
+          provide: PASSWORD_IDENTITY_REPOSITORY,
           useValue: mock<PasswordIdentityRepository>(),
         },
         {
-          provide: UserRepository,
+          provide: USER_REPOSITORY,
           useValue: mock<UserRepository>(),
         },
       ],
@@ -51,8 +52,8 @@ describe('SignupHandler', () => {
     handler = module.get(SignupHandler)
     mapper = module.get(getMapperToken())
     passwordHasher = module.get(PASSWORD_HASHER)
-    passwordIdentityRepository = module.get(PasswordIdentityRepository)
-    userRepository = module.get(UserRepository)
+    passwordIdentityRepository = module.get(PASSWORD_IDENTITY_REPOSITORY)
+    userRepository = module.get(USER_REPOSITORY)
   })
 
   it('should be defined', () => {

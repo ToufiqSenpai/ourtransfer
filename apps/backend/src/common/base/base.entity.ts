@@ -6,11 +6,11 @@ export class BaseEntity {
   @AutoMap()
   public id!: string
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   @AutoMap()
   public createdAt!: Date
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   @AutoMap()
   public updatedAt!: Date
 }

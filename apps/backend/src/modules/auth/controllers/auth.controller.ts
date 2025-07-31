@@ -29,7 +29,7 @@ import { SignupCommand } from '../commands/signup.command';
 import { LoginCommand } from "../commands/login.command"
 import { IpAddress } from "../../../common/decorators/parameter/ip-address.decorator"
 import { Response, CookieOptions } from "express"
-import { REFRESH_TOKEN_COOKIE_NAME } from "../../../infrastructure/constants/cookie-name.constant"
+import { REFRESH_TOKEN_COOKIE_NAME } from "../constants/cookie-name.constant"
 import { NodeEnv } from "@ourtransfer/common"
 import { ConfigService } from "@nestjs/config"
 import { LoginValidationPipe } from '../pipes/login-validation.pipe';

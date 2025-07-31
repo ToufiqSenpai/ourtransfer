@@ -1,12 +1,12 @@
-import { Injectable, PipeTransform } from '@nestjs/common';
+import { Inject, Injectable, PipeTransform } from '@nestjs/common';
 import { SignupDto } from '@ourtransfer/dto'
 import { z } from 'zod'
 import { plainToInstance } from 'class-transformer'
-import { UserRepository } from '../../user/repositories/user.repository';
+import { USER_REPOSITORY, UserRepository } from '../../user/repositories/user.repository';
 
 @Injectable()
 export class SignupValidationPipe implements PipeTransform<object, Promise<SignupDto>> {
-  public constructor(private readonly userRepository: UserRepository) {}
+  public constructor(@Inject(USER_REPOSITORY) private readonly userRepository: UserRepository) {}
 
   public async transform(value: object): Promise<SignupDto> {
     const schema = z.object({

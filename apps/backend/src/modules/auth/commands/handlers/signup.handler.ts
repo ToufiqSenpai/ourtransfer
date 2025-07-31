@@ -6,24 +6,29 @@ import { Mapper } from "@automapper/core"
 import { InjectMapper } from "@automapper/nestjs"
 import { plainToInstance } from "class-transformer"
 import { PASSWORD_HASHER, PasswordHasher } from "../../../../infrastructure/security/hash/password-hasher.interface"
-import { UserRepository } from "../../../user/repositories/user.repository"
+import { USER_REPOSITORY, UserRepository } from "../../../user/repositories/user.repository"
 import { User } from "../../../user/entities/user.entity"
-import { PasswordIdentityRepository } from "../../repositories/password-identity.repository"
+import { PASSWORD_IDENTITY_REPOSITORY, PasswordIdentityRepository } from "../../repositories/password-identity.repository"
 import { PasswordIdentity } from "../../entities/password-identity.entity"
+import { Transactional } from "../../../../infrastructure/database/unit-of-work/transactional.decorator"
+import { AuthProvider } from "@ourtransfer/common"
 
 @CommandHandler(SignupCommand)
 export class SignupHandler implements ICommandHandler<SignupCommand> {
   public constructor(
     @InjectMapper() private readonly mapper: Mapper,
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: PasswordHasher,
-    private readonly passwordIdentityRepository: PasswordIdentityRepository,
-    private readonly userRepository: UserRepository,
+    @Inject(USER_REPOSITORY) private readonly userRepository: UserRepository,
+    @Inject(PASSWORD_IDENTITY_REPOSITORY) private readonly passwordIdentityRepository: PasswordIdentityRepository,
   ) {}
 
+  @Transactional()
   public async execute(command: SignupCommand): Promise<CommonResponseDto> {
-    await this.userRepository.insert(this.mapper.map(command.dto, SignupDto, User))
+    const user = await this.userRepository.save(this.mapper.map(command.dto, SignupDto, User))
 
     const passwordIdentity = new PasswordIdentity()
+    passwordIdentity.user = user
+    passwordIdentity.authProvider = AuthProvider.EMAIL_PASSWORD
     passwordIdentity.email = command.dto.email
     passwordIdentity.passwordHash = await this.passwordHasher.hash(command.dto.password)
 

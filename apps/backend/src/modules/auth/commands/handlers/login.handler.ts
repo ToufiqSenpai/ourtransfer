@@ -10,12 +10,11 @@ import { plainToInstance } from 'class-transformer'
 import { ACCESS_TOKEN_JWT } from '../../../../infrastructure/security/jwt/access-token-jwt.interface'
 import { Jwt } from '../../../../infrastructure/security/jwt/jwt.interface'
 import { REFRESH_TOKEN_SERVICE, RefreshTokenService } from '../../services/refresh-token.service'
-import { UserRepository } from "../../../user/repositories/user.repository"
-import { AuthProvider } from "@ourtransfer/common"
+import { USER_REPOSITORY, UserRepository } from '../../../user/repositories/user.repository';
 import { PasswordIdentity } from "../../entities/password-identity.entity"
-import { DataSource } from 'typeorm'
 import { Logger, LOGGER } from "../../../../infrastructure/logger/logger.interface"
-import { User } from "../../../user/entities/user.entity"
+import { UNIT_OF_WORK, UnitOfWork } from '../../../../infrastructure/database/unit-of-work/unit-of-work.interface'
+import { PASSWORD_IDENTITY_REPOSITORY, PasswordIdentityRepository } from '../../repositories/password-identity.repository'
 
 @CommandHandler(LoginCommand)
 export class LoginHandler implements ICommandHandler<LoginCommand> {
@@ -24,18 +23,14 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
     @Inject(ACCESS_TOKEN_JWT) private readonly accessToken: Jwt,
     @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService: RefreshTokenService,
     @Inject(LOGGER) private readonly logger: Logger,
-    private readonly userRepository: UserRepository,
-    private readonly dataSource: DataSource,
+    @Inject(USER_REPOSITORY) private readonly userRepository: UserRepository,
+    @Inject(PASSWORD_IDENTITY_REPOSITORY) private readonly passwordIdentityRepository: PasswordIdentityRepository,
+    @Inject(UNIT_OF_WORK) private readonly unitOfWork: UnitOfWork
   ) {}
 
   public async execute(command: LoginCommand): Promise<TokensDto> {
     // Get user with password identity
-    const user = await this.userRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect('user.identities', 'identity')
-      .where('user.email = :email', { email: command.dto.email })
-      .andWhere('identity.authProvider = :authProvider', { authProvider: AuthProvider.EMAIL_PASSWORD })
-      .getOne()
+    const user = await this.userRepository.findByEmail(command.dto.email)
 
     if (!user) {
       throw new UnauthorizedException(plainToInstance(CommonResponseDto, {
@@ -79,18 +74,12 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
 
     // Update last sign in timestamps in transaction
     try {
-      await this.dataSource.transaction(async manager => {
-        // Update password identity
-        passwordIdentity.updateLastSignInAt()
-        await manager.update(PasswordIdentity, passwordIdentity.id, {
-          lastSignInAt: passwordIdentity.lastSignInAt
-        })
-
-        // Update user
+      await this.unitOfWork.transaction(async () => {
         user.updateLastSignInAt()
-        await manager.update(User, user.id, {
-          lastSignInAt: user.lastSignInAt
-        })
+        await this.userRepository.update(user.id, user)
+
+        passwordIdentity.updateLastSignInAt()
+        await this.passwordIdentityRepository.update(passwordIdentity.id, passwordIdentity)
       })
     } catch (updateError) {
       // Log the error but don't fail the login since tokens are already generated

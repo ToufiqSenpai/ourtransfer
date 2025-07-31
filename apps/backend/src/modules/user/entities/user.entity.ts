@@ -16,8 +16,8 @@ export class User extends BaseEntity {
   @AutoMap()
   public email!: string
 
-  @Column({ name: 'last_sign_in_at' })
-  public lastSignInAt!: Date
+  @Column({ name: 'last_sign_in_at', nullable: true })
+  public lastSignInAt?: Date
 
   public updateLastSignInAt(): void {
     this.lastSignInAt = new Date()

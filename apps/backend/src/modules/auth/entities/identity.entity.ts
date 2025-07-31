@@ -9,11 +9,11 @@ export class Identity extends BaseEntity {
   @ManyToOne(() => User, user => user.id)
   public user!: User
 
-  @Column({ type: "enum", enum: AuthProvider, nullable: false })
+  @Column({ name: 'auth_provider', type: "enum", enum: AuthProvider, nullable: false })
   public authProvider!: AuthProvider
 
-  @Column()
-  public lastSignInAt!: Date
+  @Column({ name: 'last_sign_in_at', nullable: true })
+  public lastSignInAt?: Date
 
   public updateLastSignInAt(): void {
     this.lastSignInAt = new Date()
