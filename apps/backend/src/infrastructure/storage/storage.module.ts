@@ -15,7 +15,7 @@ import { AzureBlobStorage } from "./azure-blob.storage"
         const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString)
         const containerClient = blobServiceClient.getContainerClient(containerName)
 
-        await containerClient.createIfNotExists()
+        // await containerClient.createIfNotExists()
 
         return containerClient
       },

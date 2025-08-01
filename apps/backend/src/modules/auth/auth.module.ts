@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { UserModule } from '../user/user.module';
 import { AuthController } from './controllers/auth.controller'
 import { SignupHandler } from './commands/handlers/signup.handler'
@@ -16,7 +16,7 @@ import { IDENTITY_SERVICE } from "./services/identity.service"
 import { IdentityServiceImpl } from './services/identity.service.impl';
 
 @Module({
-  imports: [UserModule],
+  imports: [forwardRef(() => UserModule)],
   controllers: [AuthController],
   providers: [
     // Handlers
@@ -50,5 +50,6 @@ import { IdentityServiceImpl } from './services/identity.service.impl';
       useClass: RefreshTokenServiceImpl
     }
   ],
+  exports: [IDENTITY_REPOSITORY]
 })
 export class AuthModule {}

@@ -3,6 +3,6 @@ import { ChildEntity, Column } from 'typeorm';
 
 @ChildEntity()
 export class OauthIdentity extends Identity {
-  @Column({ nullable: false, unique: true })
+  @Column({ name: 'provider_user_id', nullable: false, unique: true })
   public providerUserId!: string
 }

@@ -1,4 +1,4 @@
-import { CommandHandler, ICommandHandler } from "@nestjs/cqrs"
+import { CommandHandler, EventBus, ICommandHandler } from "@nestjs/cqrs"
 import { Inject } from "@nestjs/common"
 import { SignupCommand } from "../signup.command"
 import { CommonResponseDto, SignupDto } from "@ourtransfer/dto"
@@ -13,6 +13,7 @@ import { PasswordIdentity } from "../../entities/password-identity.entity"
 import { AuthProvider } from "@ourtransfer/common"
 import { UNIT_OF_WORK, UnitOfWork } from "../../../../infrastructure/database/unit-of-work/unit-of-work.interface"
 import { IDENTITY_SERVICE, IdentityService } from '../../services/identity.service';
+import { UserSignedUpEvent } from "../../../user/events/user-signed-up.event"
 
 @CommandHandler(SignupCommand)
 export class SignupHandler implements ICommandHandler<SignupCommand> {
@@ -22,7 +23,8 @@ export class SignupHandler implements ICommandHandler<SignupCommand> {
     @Inject(IDENTITY_SERVICE) private readonly identityService: IdentityService,
     @Inject(USER_REPOSITORY) private readonly userRepository: UserRepository,
     @Inject(PASSWORD_IDENTITY_REPOSITORY) private readonly passwordIdentityRepository: PasswordIdentityRepository,
-    @Inject(UNIT_OF_WORK) private readonly unitOfWork: UnitOfWork
+    @Inject(UNIT_OF_WORK) private readonly unitOfWork: UnitOfWork,
+    private readonly eventBus: EventBus,
   ) {}
 
   public async execute(command: SignupCommand): Promise<CommonResponseDto> {
@@ -37,6 +39,8 @@ export class SignupHandler implements ICommandHandler<SignupCommand> {
       passwordIdentity.passwordHash = await this.passwordHasher.hash(command.dto.password)
 
       await this.passwordIdentityRepository.insert(passwordIdentity)
+
+      this.eventBus.publish(new UserSignedUpEvent(user))
     })
 
     return plainToInstance(CommonResponseDto, {

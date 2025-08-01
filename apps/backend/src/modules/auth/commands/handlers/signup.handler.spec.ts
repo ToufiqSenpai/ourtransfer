@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing'
+import { EventBus } from '@nestjs/cqrs'
 import { SignupHandler } from './signup.handler'
 import { SignupCommand } from '../signup.command'
 import { CommonResponseDto, SignupDto } from '@ourtransfer/dto'
@@ -15,6 +16,7 @@ import { PasswordIdentity } from '../../entities/password-identity.entity'
 import { AuthProvider } from '@ourtransfer/common'
 import { UNIT_OF_WORK, UnitOfWork } from '../../../../infrastructure/database/unit-of-work/unit-of-work.interface'
 import { IDENTITY_SERVICE, IdentityService } from '../../services/identity.service'
+import { UserSignedUpEvent } from '../../../user/events/user-signed-up.event'
 
 describe('SignupHandler', () => {
   let handler: SignupHandler
@@ -24,6 +26,7 @@ describe('SignupHandler', () => {
   let userRepository: MockProxy<UserRepository>
   let passwordIdentityRepository: MockProxy<PasswordIdentityRepository>
   let unitOfWork: MockProxy<UnitOfWork>
+  let eventBus: MockProxy<EventBus>
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -53,6 +56,10 @@ describe('SignupHandler', () => {
           provide: UNIT_OF_WORK,
           useValue: mock<UnitOfWork>(),
         },
+        {
+          provide: EventBus,
+          useValue: mock<EventBus>(),
+        },
       ],
     }).compile()
 
@@ -63,6 +70,7 @@ describe('SignupHandler', () => {
     userRepository = module.get(USER_REPOSITORY)
     passwordIdentityRepository = module.get(PASSWORD_IDENTITY_REPOSITORY)
     unitOfWork = module.get(UNIT_OF_WORK)
+    eventBus = module.get(EventBus)
   })
 
   afterEach(() => {
@@ -103,6 +111,7 @@ describe('SignupHandler', () => {
       userRepository.save.mockResolvedValue(mockUser)
       passwordHasher.hash.mockResolvedValue(mockPasswordHash)
       passwordIdentityRepository.insert.mockResolvedValue(undefined)
+      eventBus.publish.mockResolvedValue(undefined)
       unitOfWork.transaction.mockImplementation(async (callback) => {
         if (typeof callback === 'function') {
           return await callback()
@@ -137,6 +146,13 @@ describe('SignupHandler', () => {
         })
       )
       expect(passwordIdentityRepository.insert).toHaveBeenCalledTimes(1)
+
+      expect(eventBus.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user: mockUser,
+        })
+      )
+      expect(eventBus.publish).toHaveBeenCalledTimes(1)
 
       expect(result).toBeInstanceOf(CommonResponseDto)
       expect(result.message).toBe('The user has been created successfully.')
@@ -203,6 +219,7 @@ describe('SignupHandler', () => {
       expect(userRepository.save).not.toHaveBeenCalled()
       expect(passwordHasher.hash).not.toHaveBeenCalled()
       expect(passwordIdentityRepository.insert).not.toHaveBeenCalled()
+      expect(eventBus.publish).not.toHaveBeenCalled()
     })
 
     it('should throw error if user save fails during transaction', async () => {
@@ -227,6 +244,7 @@ describe('SignupHandler', () => {
       expect(userRepository.save).toHaveBeenCalledWith(mockUser)
       expect(passwordHasher.hash).not.toHaveBeenCalled()
       expect(passwordIdentityRepository.insert).not.toHaveBeenCalled()
+      expect(eventBus.publish).not.toHaveBeenCalled()
     })
 
     it('should throw error if password hashing fails during transaction', async () => {
@@ -252,6 +270,7 @@ describe('SignupHandler', () => {
       expect(userRepository.save).toHaveBeenCalledWith(mockUser)
       expect(passwordHasher.hash).toHaveBeenCalledWith(mockSignupDto.password)
       expect(passwordIdentityRepository.insert).not.toHaveBeenCalled()
+      expect(eventBus.publish).not.toHaveBeenCalled()
     })
 
     it('should throw error if password identity insert fails during transaction', async () => {
@@ -284,6 +303,7 @@ describe('SignupHandler', () => {
           passwordHash: mockPasswordHash,
         })
       )
+      expect(eventBus.publish).not.toHaveBeenCalled()
     })
 
     it('should throw error if transaction itself fails', async () => {
@@ -301,6 +321,7 @@ describe('SignupHandler', () => {
       expect(userRepository.save).not.toHaveBeenCalled()
       expect(passwordHasher.hash).not.toHaveBeenCalled()
       expect(passwordIdentityRepository.insert).not.toHaveBeenCalled()
+      expect(eventBus.publish).not.toHaveBeenCalled()
     })
 
     it('should execute operations in correct order during transaction', async () => {
@@ -329,6 +350,11 @@ describe('SignupHandler', () => {
         return undefined
       })
 
+      eventBus.publish.mockImplementation(async () => {
+        executionOrder.push('eventBus.publish')
+        return undefined
+      })
+
       unitOfWork.transaction.mockImplementation(async (callback) => {
         if (typeof callback === 'function') {
           return await callback()
@@ -344,8 +370,39 @@ describe('SignupHandler', () => {
         'mapper.map',
         'userRepository.save',
         'passwordHasher.hash',
-        'passwordIdentityRepository.insert'
+        'passwordIdentityRepository.insert',
+        'eventBus.publish'
       ])
+    })
+
+    it('should publish UserSignedUpEvent after successful user creation', async () => {
+      // Arrange
+      identityService.throwIfIdentityExists.mockResolvedValue(undefined)
+      mapper.map.mockReturnValue(mockUser as any)
+      userRepository.save.mockResolvedValue(mockUser)
+      passwordHasher.hash.mockResolvedValue(mockPasswordHash)
+      passwordIdentityRepository.insert.mockResolvedValue(undefined)
+      eventBus.publish.mockResolvedValue(undefined)
+      unitOfWork.transaction.mockImplementation(async (callback) => {
+        if (typeof callback === 'function') {
+          return await callback()
+        }
+        throw new Error('Invalid transaction callback')
+      })
+
+      // Act
+      await handler.execute(command)
+
+      // Assert
+      expect(eventBus.publish).toHaveBeenCalledWith(
+        expect.any(UserSignedUpEvent)
+      )
+      expect(eventBus.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user: mockUser,
+        })
+      )
+      expect(eventBus.publish).toHaveBeenCalledTimes(1)
     })
 
     it('should handle different SignupDto properties correctly', async () => {

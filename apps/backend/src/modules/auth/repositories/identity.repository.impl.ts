@@ -4,6 +4,7 @@ import { Identity } from '../entities/identity.entity';
 import { IdentityRepository } from './identity.repository';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, EntityManager } from 'typeorm';
+import { AuthProvider } from '@ourtransfer/common';
 import {
   TRANSACTION_CONTEXT_SERVICE,
   TransactionContextService
@@ -18,11 +19,19 @@ export class IdentityRepositoryImpl extends BaseRepositoryImpl<Identity, string>
     super(dataSource, transactionContextService, Identity);
   }
 
-  public findByUserEmail(userEmail: string): Promise<Identity | null> {
+  public findByUserEmail(userEmail: string): Promise<Identity[]> {
     return this.getRepository()
       .createQueryBuilder('identity')
       .leftJoinAndSelect('identity.user', 'user')
       .where('user.email = :email', { email: userEmail })
-      .getOne()
+      .getMany()
+  }
+
+  public async existsEmailAuthProviderByUserId(userId: string): Promise<boolean> {
+    return await this.getRepository()
+      .createQueryBuilder('identity')
+      .where('identity.user_id = :userId', { userId })
+      .andWhere('identity.authProvider = :authProvider', { authProvider: AuthProvider.EMAIL })
+      .getExists()
   }
 }
