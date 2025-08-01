@@ -10,6 +10,10 @@ import { PasswordIdentityRepositoryImpl } from "./repositories/password-identity
 import { RefreshTokenRepositoryImpl } from "./repositories/refresh-token.repository.impl"
 import { LoginHandler } from './commands/handlers/login.handler';
 import { AuthMapper } from './mappers/auth.mapper';
+import { IDENTITY_REPOSITORY } from "./repositories/identity.repository"
+import { IdentityRepositoryImpl } from "./repositories/identity.repository.impl"
+import { IDENTITY_SERVICE } from "./services/identity.service"
+import { IdentityServiceImpl } from './services/identity.service.impl';
 
 @Module({
   imports: [UserModule],
@@ -20,6 +24,10 @@ import { AuthMapper } from './mappers/auth.mapper';
     LoginHandler,
 
     // Repositories
+    {
+      provide: IDENTITY_REPOSITORY,
+      useClass: IdentityRepositoryImpl,
+    },
     {
       provide: PASSWORD_IDENTITY_REPOSITORY,
       useClass: PasswordIdentityRepositoryImpl,
@@ -33,6 +41,10 @@ import { AuthMapper } from './mappers/auth.mapper';
     AuthMapper,
 
     // Services
+    {
+      provide: IDENTITY_SERVICE,
+      useClass: IdentityServiceImpl,
+    },
     {
       provide: REFRESH_TOKEN_SERVICE,
       useClass: RefreshTokenServiceImpl

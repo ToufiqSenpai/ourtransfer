@@ -7,6 +7,7 @@ import {
   ApiOperation,
   ApiNotFoundResponse,
   ApiUnauthorizedResponse, ApiForbiddenResponse,
+  ApiConflictResponse,
 } from "@nestjs/swagger"
 import {
   GetLoginProviderResponseDto,
@@ -111,6 +112,10 @@ export class AuthController {
   @ApiBadRequestResponse({
     type: SignupBadRequestDto,
     description: "The request body is invalid or a user with the given email address already exists.",
+  })
+  @ApiConflictResponse({
+    type: CommonResponseDto,
+    description: "A user with the given email address already links to an authentication provider.",
   })
   public async signup(@Body(SignupValidationPipe) dto: SignupDto): Promise<CommonResponseDto> {
     return this.commandBus.execute(new SignupCommand(dto))

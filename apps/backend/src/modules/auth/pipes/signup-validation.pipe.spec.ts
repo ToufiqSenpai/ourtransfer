@@ -1,28 +1,20 @@
 import { Test } from '@nestjs/testing'
 import { SignupValidationPipe } from './signup-validation.pipe'
-import { UserRepository } from '../../user/repositories/user.repository'
-import { mock, MockProxy } from 'jest-mock-extended'
 import { ZodError } from 'zod'
 import { SignupDto } from '@ourtransfer/dto'
 import { faker } from '@faker-js/faker'
 
 describe('SignupValidationPipe', () => {
   let pipe: SignupValidationPipe
-  let userRepository: MockProxy<UserRepository>
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       providers: [
-        SignupValidationPipe,
-        {
-          provide: UserRepository,
-          useValue: mock<UserRepository>(),
-        },
+        SignupValidationPipe
       ],
     }).compile()
 
     pipe = module.get(SignupValidationPipe)
-    userRepository = module.get(UserRepository)
   })
 
   it('should be defined', () => {
@@ -36,7 +28,6 @@ describe('SignupValidationPipe', () => {
         email: faker.internet.email(),
         password: faker.internet.password({ length: 10 }),
       }
-      userRepository.existsByEmail.mockResolvedValue(false)
 
       const result = await pipe.transform(validData)
 
@@ -52,7 +43,6 @@ describe('SignupValidationPipe', () => {
         email: faker.internet.email(),
         password: faker.internet.password({ length: 10 }),
       }
-      userRepository.existsByEmail.mockResolvedValue(true)
 
       await expect(pipe.transform(data)).rejects.toThrow(ZodError)
 
@@ -70,7 +60,6 @@ describe('SignupValidationPipe', () => {
           email: faker.internet.email(),
           password: faker.internet.password({ length: 10 }),
         }
-        userRepository.existsByEmail.mockResolvedValue(false)
 
         await expect(pipe.transform(invalidData)).rejects.toThrow(ZodError)
 
@@ -88,7 +77,6 @@ describe('SignupValidationPipe', () => {
           email: faker.internet.email(),
           password: faker.internet.password({ length: 10 }),
         }
-        userRepository.existsByEmail.mockResolvedValue(false)
 
         await expect(pipe.transform(invalidData)).rejects.toThrow(ZodError)
 
@@ -106,7 +94,6 @@ describe('SignupValidationPipe', () => {
           email: faker.internet.email(),
           password: faker.internet.password({ length: 10 }),
         }
-        userRepository.existsByEmail.mockResolvedValue(false)
 
         await expect(pipe.transform(invalidData)).rejects.toThrow(ZodError)
 
@@ -124,7 +111,6 @@ describe('SignupValidationPipe', () => {
           email: faker.internet.email(),
           password: faker.internet.password({ length: 10 }),
         }
-        userRepository.existsByEmail.mockResolvedValue(false)
 
         await expect(pipe.transform(invalidData)).rejects.toThrow(ZodError)
 
@@ -142,7 +128,6 @@ describe('SignupValidationPipe', () => {
           email: faker.internet.email(),
           password: faker.internet.password({ length: 10 }),
         }
-        userRepository.existsByEmail.mockResolvedValue(false)
 
         const result = await pipe.transform(validData)
 
@@ -208,7 +193,6 @@ describe('SignupValidationPipe', () => {
           email: 'not-an-email',
           password: faker.internet.password({ length: 10 }),
         }
-        userRepository.existsByEmail.mockResolvedValue(false)
 
         await expect(pipe.transform(invalidData)).rejects.toThrow(ZodError)
 
@@ -227,7 +211,6 @@ describe('SignupValidationPipe', () => {
           email: longEmail,
           password: faker.internet.password({ length: 10 }),
         }
-        userRepository.existsByEmail.mockResolvedValue(false)
 
         await expect(pipe.transform(invalidData)).rejects.toThrow(ZodError)
 
@@ -253,7 +236,6 @@ describe('SignupValidationPipe', () => {
             email: email,
             password: faker.internet.password({ length: 10 }),
           }
-          userRepository.existsByEmail.mockResolvedValue(false)
 
           const result = await pipe.transform(validData)
           expect(result).toBeInstanceOf(SignupDto)
@@ -268,7 +250,6 @@ describe('SignupValidationPipe', () => {
           name: faker.person.fullName(),
           email: faker.internet.email(),
         }
-        userRepository.existsByEmail.mockResolvedValue(false)
 
         await expect(pipe.transform(invalidData)).rejects.toThrow(ZodError)
 
@@ -286,7 +267,6 @@ describe('SignupValidationPipe', () => {
           email: faker.internet.email(),
           password: 123456,
         }
-        userRepository.existsByEmail.mockResolvedValue(false)
 
         await expect(pipe.transform(invalidData)).rejects.toThrow(ZodError)
 
@@ -304,7 +284,6 @@ describe('SignupValidationPipe', () => {
           email: faker.internet.email(),
           password: '12345',
         }
-        userRepository.existsByEmail.mockResolvedValue(false)
 
         await expect(pipe.transform(invalidData)).rejects.toThrow(ZodError)
 
@@ -322,7 +301,6 @@ describe('SignupValidationPipe', () => {
           email: faker.internet.email(),
           password: 'a'.repeat(101),
         }
-        userRepository.existsByEmail.mockResolvedValue(false)
 
         await expect(pipe.transform(invalidData)).rejects.toThrow(ZodError)
 
@@ -340,7 +318,6 @@ describe('SignupValidationPipe', () => {
           email: faker.internet.email(),
           password: '123456',
         }
-        userRepository.existsByEmail.mockResolvedValue(false)
 
         const result = await pipe.transform(validData)
 
@@ -354,7 +331,6 @@ describe('SignupValidationPipe', () => {
           email: faker.internet.email(),
           password: 'a'.repeat(100),
         }
-        userRepository.existsByEmail.mockResolvedValue(false)
 
         const result = await pipe.transform(validData)
 
@@ -370,7 +346,6 @@ describe('SignupValidationPipe', () => {
           email: 'invalid-email',
           password: '123',
         }
-        userRepository.existsByEmail.mockResolvedValue(false)
 
         await expect(pipe.transform(invalidData)).rejects.toThrow(ZodError)
 
