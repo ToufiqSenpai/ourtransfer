@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Post, HttpCode, HttpStatus, Headers, Res } from "@nestjs/common"
-import { CommandBus } from '@nestjs/cqrs';
+import { Body, Controller, Get, Post, HttpCode, HttpStatus, Headers, Res, Query } from "@nestjs/common"
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   ApiBadRequestResponse,
   ApiOkResponse,
@@ -10,12 +10,10 @@ import {
   ApiConflictResponse,
 } from "@nestjs/swagger"
 import {
-  GetLoginProviderResponseDto,
-  GetLoginProviderBadRequestDto,
-  CommonResponseDto,
-  GetLoginProviderDto,
-  RequestVerificationFromEmailDto,
   RequestVerificationFromEmailBadRequestDto,
+  RequestVerificationFromEmailDto,
+  CommonResponseDto,
+  GetProvidersResponseDto,
   VerifyUserFromEmailDto,
   VerifyUserFromEmailBadRequestDto,
   SignupBadRequestDto,
@@ -24,6 +22,7 @@ import {
   TokensDto,
   PasswordResetBadRequestDto,
   VerifyPasswordResetBadRequestDto, LoginDto,
+  GetProvidersBadRequestDto,
 } from "@ourtransfer/dto"
 import { SignupValidationPipe } from '../pipes/signup-validation.pipe';
 import { SignupCommand } from '../commands/signup.command';
@@ -34,31 +33,37 @@ import { REFRESH_TOKEN_COOKIE_NAME } from "../constants/cookie-name.constant"
 import { NodeEnv } from "@ourtransfer/common"
 import { ConfigService } from "@nestjs/config"
 import { LoginValidationPipe } from '../pipes/login-validation.pipe';
+import { EmailValidationPipe } from "../../../common/pipes/email-validation.pipe";
+import { GetProvidersQuery } from "../queries/get-providers.query";
 
 @Controller({ version: "1", path: "/auth" })
 export class AuthController {
-  public constructor(private readonly commandBus: CommandBus, private readonly config: ConfigService) {}
+  public constructor(
+    private readonly queryBus: QueryBus,
+    private readonly commandBus: CommandBus,
+    private readonly config: ConfigService
+  ) {}
 
-  @Post("/login-provider")
+  @Get("/providers")
   @ApiOperation({
     summary: "Get login provider by email",
     description:
       "This endpoint returns the login provider for a given email address. This is useful for determining whether a user should log in with a password or a social provider.",
   })
   @ApiOkResponse({
-    type: GetLoginProviderResponseDto,
+    type: GetProvidersResponseDto,
     description: "The login provider for the given email address.",
   })
   @ApiBadRequestResponse({
-    type: GetLoginProviderBadRequestDto,
-    description: "The request body is invalid.",
+    type: GetProvidersBadRequestDto,
+    description: "The request body is invalid."
   })
   @ApiNotFoundResponse({
     type: CommonResponseDto,
     description: "The user with the given email address was not found.",
   })
-  public async getLoginProvider(@Body() dto: GetLoginProviderDto): Promise<GetLoginProviderResponseDto> {
-    return new GetLoginProviderResponseDto()
+  public async getProvider(@Query('email', EmailValidationPipe) email: string): Promise<GetProvidersResponseDto> {
+    return this.queryBus.execute(new GetProvidersQuery(email))
   }
 
   @Post("/email/request")

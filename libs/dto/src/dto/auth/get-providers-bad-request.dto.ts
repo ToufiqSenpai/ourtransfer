@@ -1,18 +1,19 @@
 import { ApiProperty } from "@nestjs/swagger"
 import { BaseBadRequestDto } from "../common/base-bad-request.dto"
 
-class RequestVerificationFromEmailErrorMessage {
+class GetProvidersErrorMessage {
   @ApiProperty({
     type: [String],
     description: "List of errors related to the email field.",
-    example: ["Email is required."],
+    example: ["Email is invalid."],
   })
   public email!: string[]
 }
-export class RequestVerificationFromEmailBadRequestDto extends BaseBadRequestDto<RequestVerificationFromEmailErrorMessage> {
+
+export class GetProvidersBadRequestDto extends BaseBadRequestDto<GetProvidersErrorMessage> {
   @ApiProperty({
-    type: RequestVerificationFromEmailErrorMessage,
+    type: GetProvidersErrorMessage,
     description: "Detailed error messages for each field.",
   })
-  public errors!: RequestVerificationFromEmailErrorMessage
+  public errors!: GetProvidersErrorMessage
 }

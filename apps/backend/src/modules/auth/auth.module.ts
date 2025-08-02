@@ -14,6 +14,7 @@ import { IDENTITY_REPOSITORY } from "./repositories/identity.repository"
 import { IdentityRepositoryImpl } from "./repositories/identity.repository.impl"
 import { IDENTITY_SERVICE } from "./services/identity.service"
 import { IdentityServiceImpl } from './services/identity.service.impl';
+import { GetProvidersHandler } from './queries/handlers/get-providers.handler';
 
 @Module({
   imports: [forwardRef(() => UserModule)],
@@ -22,6 +23,7 @@ import { IdentityServiceImpl } from './services/identity.service.impl';
     // Handlers
     SignupHandler,
     LoginHandler,
+    GetProvidersHandler,
 
     // Repositories
     {
