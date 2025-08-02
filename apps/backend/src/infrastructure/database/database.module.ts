@@ -30,7 +30,6 @@ import { ProviderUtil } from "../utils/provider.util"
           entities: [User, Identity, PasswordIdentity, OauthIdentity, RefreshToken],
           synchronize: config.get("app.nodeEnv") !== NodeEnv.PRODUCTION,
           ssl: config.get<boolean>("database.ssl"),
-          dropSchema: true, // Only for development purposes
           logging: config.get("app.nodeEnv") !== NodeEnv.TEST,
           logger: typeOrmLogger,
         }

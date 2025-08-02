@@ -1,4 +1,4 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs'
+import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs'
 import { ForbiddenException, Inject, UnauthorizedException } from "@nestjs/common"
 import { LoginCommand } from '../login.command'
 import { TokensDto, CommonResponseDto } from '@ourtransfer/dto'
@@ -12,9 +12,8 @@ import { Jwt } from '../../../../infrastructure/security/jwt/jwt.interface'
 import { REFRESH_TOKEN_SERVICE, RefreshTokenService } from '../../services/refresh-token.service'
 import { USER_REPOSITORY, UserRepository } from '../../../user/repositories/user.repository';
 import { PasswordIdentity } from "../../entities/password-identity.entity"
-import { Logger, LOGGER } from "../../../../infrastructure/logger/logger.interface"
-import { UNIT_OF_WORK, UnitOfWork } from '../../../../infrastructure/database/unit-of-work/unit-of-work.interface'
-import { PASSWORD_IDENTITY_REPOSITORY, PasswordIdentityRepository } from '../../repositories/password-identity.repository'
+import { AuthProvider } from '@ourtransfer/common'
+import { UserLoggedInEvent } from '../../events/user-logged-in.event'
 
 @CommandHandler(LoginCommand)
 export class LoginHandler implements ICommandHandler<LoginCommand> {
@@ -22,10 +21,8 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: PasswordHasher,
     @Inject(ACCESS_TOKEN_JWT) private readonly accessToken: Jwt,
     @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService: RefreshTokenService,
-    @Inject(LOGGER) private readonly logger: Logger,
     @Inject(USER_REPOSITORY) private readonly userRepository: UserRepository,
-    @Inject(PASSWORD_IDENTITY_REPOSITORY) private readonly passwordIdentityRepository: PasswordIdentityRepository,
-    @Inject(UNIT_OF_WORK) private readonly unitOfWork: UnitOfWork
+    private readonly eventBus: EventBus
   ) {}
 
   public async execute(command: LoginCommand): Promise<TokensDto> {
@@ -39,7 +36,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
     }
 
     // Check for identities existence
-    if (!user.identities || user.identities.length === 0) {
+    if (!user.identities || user.identities.some(identity => identity.authProvider === AuthProvider.EMAIL_PASSWORD)) {
       throw new ForbiddenException(plainToInstance(CommonResponseDto, {
         message: "Unsupported authentication method. Please use a different login method."
       }))
@@ -72,19 +69,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
     const accessToken = await this.accessToken.sign(user.id)
     const refreshToken = await this.refreshTokenService.create(user, command.userAgent, command.ipAddress)
 
-    // Update last sign in timestamps in transaction
-    try {
-      await this.unitOfWork.transaction(async () => {
-        user.updateLastSignInAt()
-        await this.userRepository.update(user.id, user)
-
-        passwordIdentity.updateLastSignInAt()
-        await this.passwordIdentityRepository.update(passwordIdentity.id, passwordIdentity)
-      })
-    } catch (updateError) {
-      // Log the error but don't fail the login since tokens are already generated
-      this.logger.error('Failed to update last sign in timestamps', updateError)
-    }
+    this.eventBus.publish(new UserLoggedInEvent(user, passwordIdentity))
 
     const tokens = new TokensDto()
     tokens.accessToken = accessToken
