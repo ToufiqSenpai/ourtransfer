@@ -157,20 +157,20 @@ export class AuthController {
     res.status(HttpStatus.OK).json(tokens)
   }
 
-  @Get("/google")
+  @Get("/oauth/google")
   @ApiOperation({
-    summary: "Redirect to Google for authentication",
-    description: "This endpoint redirects the user to Google for authentication.",
+    summary: "Get Google OAuth URL",
+    description: "This endpoint returns the Google OAuth URL for authentication.",
   })
   @ApiOkResponse({
     type: GoogleAuthResponseDto,
-    description: "The user has been redirected to Google for authentication.",
+    description: "The Google OAuth URL has been retrieved successfully.",
   })
   public async googleAuth(): Promise<GoogleAuthResponseDto> {
     return new GoogleAuthResponseDto()
   }
 
-  @Get("/google/redirect")
+  @Get("/oauth/google/redirect")
   @ApiOperation({
     summary: "Handle Google authentication redirect",
     description: "This endpoint handles the redirect from Google after the user has authenticated.",

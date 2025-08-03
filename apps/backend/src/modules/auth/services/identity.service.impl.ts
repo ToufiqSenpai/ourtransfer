@@ -4,10 +4,20 @@ import { IDENTITY_REPOSITORY, IdentityRepository } from '../repositories/identit
 import { plainToInstance } from 'class-transformer';
 import { CommonResponseDto } from '@ourtransfer/dto';
 import { AuthProvider } from '@ourtransfer/common';
+import { User } from '../../user/entities/user.entity';
+import { Identity } from '../entities/identity.entity';
 
 @Injectable()
 export class IdentityServiceImpl implements IdentityService {
   public constructor(@Inject(IDENTITY_REPOSITORY) private readonly identityRepository: IdentityRepository) {}
+
+  public async createEmailIdentity(user: User): Promise<Identity> {
+    const identity = new Identity()
+    identity.authProvider = AuthProvider.EMAIL
+    identity.user = user
+
+    return await this.identityRepository.save(identity)
+  }
 
   public async throwIfIdentityExists(userEmail: string, exceptsProvider?: AuthProvider[]): Promise<void | never> {
     const identities = await this.identityRepository.findByUserEmail(userEmail)

@@ -3,6 +3,7 @@ import { CqrsModule } from "@nestjs/cqrs"
 import { InfrastructureModule } from "./infrastructure/infrastructure.module"
 import { AutomapperModule } from "@automapper/nestjs"
 import { classes } from "@automapper/classes"
+import { HttpModule } from "@nestjs/axios"
 import { UserModule } from "./modules/user/user.module"
 import { AuthModule } from "./modules/auth/auth.module"
 
@@ -12,6 +13,7 @@ import { AuthModule } from "./modules/auth/auth.module"
     AutomapperModule.forRoot({
       strategyInitializer: classes()
     }),
+    HttpModule,
     InfrastructureModule,
     AuthModule,
     UserModule
