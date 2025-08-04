@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { BaseRepositoryImpl } from '../../../infrastructure/database/base.repository.impl';
+import { BaseRepositoryImpl } from '../../../infrastructure/database/base.repository';
 import { PasswordIdentity } from '../entities/password-identity.entity';
 import { PasswordIdentityRepository } from './password-identity.repository';
 import { TRANSACTION_CONTEXT_SERVICE, TransactionContextService } from '../../../infrastructure/database/unit-of-work/transaction-context.service';

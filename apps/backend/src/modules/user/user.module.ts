@@ -1,27 +1,25 @@
 import { forwardRef, Module } from '@nestjs/common'
 import { UserController } from './controllers/user.controller'
 import { UserMapper } from './mappers/user.mapper'
-import { USER_REPOSITORY } from './repositories/user.repository'
-import { UserRepositoryImpl} from "./repositories/user.repository.impl"
 import { AuthModule } from '../auth/auth.module'
-import { UserSignedUpEventHandler } from './events/handlers/user-signed-up.handler'
+import { UserService } from './services/user.service'
+import { UserRepository } from './repositories/user.repository'
 
 @Module({
   imports: [forwardRef(() => AuthModule)],
   controllers: [UserController],
   providers: [
     // Handlers
-    UserSignedUpEventHandler,
 
     // Repositories
-    {
-      provide: USER_REPOSITORY,
-      useClass: UserRepositoryImpl,
-    },
+    UserRepository,
 
     // Mappers
     UserMapper,
+
+    // Services
+    UserService
   ],
-  exports: [USER_REPOSITORY],
+  exports: [UserService],
 })
 export class UserModule {}

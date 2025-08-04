@@ -24,6 +24,7 @@ export * from "./dto/transfer/create-transfer.dto"
 export * from "./dto/transfer/create-transfer-bad-request.dto"
 export * from "./dto/transfer/transfer.dto"
 
+export * from "./dto/user/create-user.dto"
 export * from "./dto/user/user.dto"
 export * from "./dto/user/update-user.dto"
 export * from "./dto/user/update-user-bad-request.dto"

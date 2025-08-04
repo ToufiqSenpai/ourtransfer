@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { BaseRepositoryImpl } from '../../../infrastructure/database/base.repository.impl';
+import { BaseRepositoryImpl } from '../../../infrastructure/database/base.repository';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { RefreshTokenRepository } from './refresh-token.repository';
 import { TRANSACTION_CONTEXT_SERVICE, TransactionContextService } from '../../../infrastructure/database/unit-of-work/transaction-context.service';

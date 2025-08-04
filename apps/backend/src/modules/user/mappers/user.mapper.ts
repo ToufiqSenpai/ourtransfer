@@ -1,7 +1,7 @@
 import { afterMap, createMap, Mapper } from '@automapper/core'
 import { AutomapperProfile, InjectMapper } from '@automapper/nestjs'
 import { User } from '../entities/user.entity'
-import { UserDto } from '@ourtransfer/dto'
+import { CreateUserDto, UserDto } from '@ourtransfer/dto'
 import { Inject } from '@nestjs/common'
 import { FILE_STORAGE, FileOperation, FileStorage } from '../../../infrastructure/storage/file-storage.interface'
 
@@ -15,6 +15,7 @@ export class UserMapper extends AutomapperProfile {
 
   public override get profile() {
     return (mapper: Mapper): void => {
+      createMap(mapper, CreateUserDto, User)
       createMap(
         mapper,
         User,

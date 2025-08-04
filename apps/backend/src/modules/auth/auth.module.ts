@@ -52,6 +52,5 @@ import { GetProvidersHandler } from './queries/handlers/get-providers.handler';
       useClass: RefreshTokenServiceImpl
     }
   ],
-  exports: [IDENTITY_REPOSITORY]
 })
 export class AuthModule {}

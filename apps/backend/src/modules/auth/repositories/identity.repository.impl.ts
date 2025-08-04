@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { BaseRepositoryImpl } from '../../../infrastructure/database/base.repository.impl';
+import { BaseRepositoryImpl } from '../../../infrastructure/database/base.repository';
 import { Identity } from '../entities/identity.entity';
 import { IdentityRepository } from './identity.repository';
 import { InjectDataSource } from '@nestjs/typeorm';

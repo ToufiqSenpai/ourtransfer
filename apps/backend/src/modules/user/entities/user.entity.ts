@@ -1,13 +1,9 @@
-import { Column, Entity, OneToMany } from "typeorm"
+import { Column, Entity } from "typeorm"
 import { BaseEntity } from '../../../common/base/base.entity'
 import { AutoMap } from '@automapper/classes'
-import { Identity } from "../../auth/entities/identity.entity"
 
 @Entity({ name: "users" })
 export class User extends BaseEntity {
-  @OneToMany(() => Identity, (identity) => identity.user)
-  public identities?: Identity[]
-
   @Column()
   @AutoMap()
   public name!: string
@@ -15,6 +11,10 @@ export class User extends BaseEntity {
   @Column({ unique: true })
   @AutoMap()
   public email!: string
+
+  @Column({ nullable: true })
+  @AutoMap()
+  public password?: string
 
   @Column({ name: 'last_sign_in_at', nullable: true })
   public lastSignInAt?: Date
