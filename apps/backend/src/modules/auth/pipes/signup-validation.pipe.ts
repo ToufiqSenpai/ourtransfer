@@ -2,11 +2,11 @@ import { Injectable, PipeTransform } from '@nestjs/common';
 import { SignupDto } from '@ourtransfer/dto'
 import { z } from 'zod'
 import { plainToInstance } from 'class-transformer'
-import { UserService } from '../../user/services/user.service';
+import { UserRepository } from '../../user/repositories/user.repository';
 
 @Injectable()
 export class SignupValidationPipe implements PipeTransform<object, Promise<SignupDto>> {
-  public constructor(private readonly userService: UserService) {}
+  public constructor(private readonly userRepository: UserRepository) {}
 
   public async transform(value: object): Promise<SignupDto> {
     const schema = z.object({
@@ -19,7 +19,7 @@ export class SignupValidationPipe implements PipeTransform<object, Promise<Signu
         .min(1, { message: 'Email is required.' })
         .max(100, { message: 'Email must be less than 100 characters.' })
         .email({ message: 'Email must be a valid email address.' })
-        .refine(async email => !(await this.userService.existsByEmail(email)), {
+        .refine(async email => !(await this.userRepository.existsByEmail(email)), {
           message: 'Email already exists.',
         }),
       password: z

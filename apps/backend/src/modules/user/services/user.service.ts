@@ -23,8 +23,4 @@ export class UserService {
 
     return await this.userRepository.save(user)
   }
-
-  public async existsByEmail(email: string): Promise<boolean> {
-    return this.userRepository.existsByEmail(email)
-  }
 }

@@ -3,26 +3,26 @@ import { SignupValidationPipe } from './signup-validation.pipe'
 import { ZodError } from 'zod'
 import { SignupDto } from '@ourtransfer/dto'
 import { faker } from '@faker-js/faker'
-import { UserService } from '../../user/services/user.service'
 import { mock, MockProxy } from 'jest-mock-extended'
+import { UserRepository } from '../../user/repositories/user.repository'
 
 describe('SignupValidationPipe', () => {
   let pipe: SignupValidationPipe
-  let userService: MockProxy<UserService>
+  let userRepository: MockProxy<UserRepository>
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       providers: [
         SignupValidationPipe,
         {
-          provide: UserService,
-          useValue: mock<UserService>(),
+          provide: UserRepository,
+          useValue: mock<UserRepository>(),
         },
       ],
     }).compile()
 
     pipe = module.get(SignupValidationPipe)
-    userService = module.get(UserService)
+    userRepository = module.get(UserRepository)
   })
 
   afterEach(() => {
@@ -42,7 +42,7 @@ describe('SignupValidationPipe', () => {
       }
 
       // Mock that email doesn't exist
-      userService.existsByEmail.mockResolvedValue(false)
+      userRepository.existsByEmail.mockResolvedValue(false)
 
       const result = await pipe.transform(validData)
 
@@ -50,7 +50,7 @@ describe('SignupValidationPipe', () => {
       expect(result.name).toBe(validData.name)
       expect(result.email).toBe(validData.email)
       expect(result.password).toBe(validData.password)
-      expect(userService.existsByEmail).toHaveBeenCalledWith(validData.email)
+      expect(userRepository.existsByEmail).toHaveBeenCalledWith(validData.email)
     })
 
     it('should throw a ZodError if email already exists', async () => {
@@ -61,7 +61,7 @@ describe('SignupValidationPipe', () => {
       }
 
       // Mock that email already exists
-      userService.existsByEmail.mockResolvedValue(true)
+      userRepository.existsByEmail.mockResolvedValue(true)
 
       await expect(pipe.transform(data)).rejects.toThrow(ZodError)
 
@@ -72,13 +72,13 @@ describe('SignupValidationPipe', () => {
         expect((error as ZodError).errors[0].message).toBe('Email already exists.')
       }
 
-      expect(userService.existsByEmail).toHaveBeenCalledWith(data.email)
+      expect(userRepository.existsByEmail).toHaveBeenCalledWith(data.email)
     })
 
     describe('name validation', () => {
       beforeEach(() => {
         // Mock that email doesn't exist for name validation tests
-        userService.existsByEmail.mockResolvedValue(false)
+        userRepository.existsByEmail.mockResolvedValue(false)
       })
 
       it('should throw a ZodError for missing name', async () => {
@@ -165,7 +165,7 @@ describe('SignupValidationPipe', () => {
     describe('email validation', () => {
       beforeEach(() => {
         // Mock that email doesn't exist for most email validation tests
-        userService.existsByEmail.mockResolvedValue(false)
+        userRepository.existsByEmail.mockResolvedValue(false)
       })
 
       it('should throw a ZodError for missing email', async () => {
@@ -282,7 +282,7 @@ describe('SignupValidationPipe', () => {
         }
 
         // Mock that email already exists
-        userService.existsByEmail.mockResolvedValue(true)
+        userRepository.existsByEmail.mockResolvedValue(true)
 
         await expect(pipe.transform(invalidData)).rejects.toThrow(ZodError)
 
@@ -293,14 +293,14 @@ describe('SignupValidationPipe', () => {
           expect((error as ZodError).errors.some(e => e.message === 'Email already exists.')).toBe(true)
         }
 
-        expect(userService.existsByEmail).toHaveBeenCalledWith(invalidData.email)
+        expect(userRepository.existsByEmail).toHaveBeenCalledWith(invalidData.email)
       })
     })
 
     describe('password validation', () => {
       beforeEach(() => {
         // Mock that email doesn't exist for password validation tests
-        userService.existsByEmail.mockResolvedValue(false)
+        userRepository.existsByEmail.mockResolvedValue(false)
       })
 
       it('should throw a ZodError for missing password', async () => {
@@ -400,7 +400,7 @@ describe('SignupValidationPipe', () => {
     describe('multiple validation errors', () => {
       beforeEach(() => {
         // Mock that email doesn't exist for multiple validation tests
-        userService.existsByEmail.mockResolvedValue(false)
+        userRepository.existsByEmail.mockResolvedValue(false)
       })
 
       it('should throw ZodError with multiple errors for completely invalid data', async () => {
