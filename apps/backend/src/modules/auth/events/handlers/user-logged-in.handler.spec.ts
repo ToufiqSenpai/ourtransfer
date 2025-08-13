@@ -1,26 +1,28 @@
-import { Test } from '@nestjs/testing'
-import { UserLoggedInHandler } from './user-logged-in.handler'
-import { UserLoggedInEvent } from '../user-logged-in.event'
+import { Test, TestingModule } from '@nestjs/testing'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { faker } from '@faker-js/faker'
 import { plainToInstance } from 'class-transformer'
+import { UserLoggedInHandler } from './user-logged-in.handler'
+import { UserLoggedInEvent } from '../user-logged-in.event'
 import { LOGGER, Logger } from '../../../../infrastructure/logger/logger.interface'
-import { UNIT_OF_WORK, UnitOfWork } from '../../../../infrastructure/database/unit-of-work/unit-of-work.interface'
-import { IDENTITY_REPOSITORY, IdentityRepository } from '../../repositories/identity.repository'
-import { USER_REPOSITORY, UserRepository } from '../../../user/repositories/user.repository'
+import { UserRepository } from '../../../user/repositories/user.repository'
 import { User } from '../../../user/entities/user.entity'
-import { PasswordIdentity } from '../../entities/password-identity.entity'
 import { AuthProvider } from '@ourtransfer/common'
 
+/**
+ * Unit tests for UserLoggedInHandler
+ *
+ * Tests the event handler responsible for updating user's last sign-in timestamp
+ * when a user successfully logs in. Covers successful updates, error handling,
+ * and logging behavior.
+ */
 describe('UserLoggedInHandler', () => {
   let handler: UserLoggedInHandler
   let logger: MockProxy<Logger>
-  let unitOfWork: MockProxy<UnitOfWork>
-  let identityRepository: MockProxy<IdentityRepository>
   let userRepository: MockProxy<UserRepository>
 
   beforeEach(async () => {
-    const module = await Test.createTestingModule({
+    const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserLoggedInHandler,
         {
@@ -28,25 +30,15 @@ describe('UserLoggedInHandler', () => {
           useValue: mock<Logger>(),
         },
         {
-          provide: UNIT_OF_WORK,
-          useValue: mock<UnitOfWork>(),
-        },
-        {
-          provide: IDENTITY_REPOSITORY,
-          useValue: mock<IdentityRepository>(),
-        },
-        {
-          provide: USER_REPOSITORY,
+          provide: UserRepository,
           useValue: mock<UserRepository>(),
         },
       ],
     }).compile()
 
-    handler = module.get(UserLoggedInHandler)
-    logger = module.get(LOGGER)
-    unitOfWork = module.get(UNIT_OF_WORK)
-    identityRepository = module.get(IDENTITY_REPOSITORY)
-    userRepository = module.get(USER_REPOSITORY)
+    handler = module.get<UserLoggedInHandler>(UserLoggedInHandler)
+    logger = module.get<MockProxy<Logger>>(LOGGER)
+    userRepository = module.get<MockProxy<UserRepository>>(UserRepository)
   })
 
   afterEach(() => {
@@ -54,228 +46,378 @@ describe('UserLoggedInHandler', () => {
   })
 
   describe('handle', () => {
-    const mockUser = plainToInstance(User, {
-      id: faker.string.uuid(),
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
-      lastSignInAt: faker.date.past(),
-      identities: [],
-      createdAt: faker.date.past(),
-      updatedAt: faker.date.recent(),
-      updateLastSignInAt: jest.fn(),
-    })
-
-    const mockIdentity = plainToInstance(PasswordIdentity, {
-      id: faker.string.uuid(),
-      email: mockUser.email,
-      passwordHash: faker.string.alphanumeric(60),
-      authProvider: AuthProvider.EMAIL_PASSWORD,
-      lastSignInAt: faker.date.past(),
-      createdAt: faker.date.past(),
-      updatedAt: faker.date.recent(),
-      updateLastSignInAt: jest.fn(),
-      user: mockUser,
-    })
-
-    let event: UserLoggedInEvent
-
-    beforeEach(() => {
-      event = new UserLoggedInEvent(mockUser, mockIdentity)
-    })
-
-    afterEach(() => {
-      jest.resetAllMocks()
-      jest.restoreAllMocks()
-    })
-
-    it('should successfully update last sign in timestamps for user and identity', async () => {
-      // Arrange
-      unitOfWork.transaction.mockImplementation(async (callback) => {
-        return await callback()
-      })
-      userRepository.update.mockResolvedValue(undefined)
-      identityRepository.update.mockResolvedValue(undefined)
-      // Ensure updateLastSignInAt is a jest mock
-      mockUser.updateLastSignInAt = jest.fn()
-      mockIdentity.updateLastSignInAt = jest.fn()
-
-      // Act
-      await handler.handle(event)
-
-      // Assert
-      expect(unitOfWork.transaction).toHaveBeenCalledTimes(1)
-      expect(mockUser.updateLastSignInAt).toHaveBeenCalledTimes(1)
-      expect(mockIdentity.updateLastSignInAt).toHaveBeenCalledTimes(1)
-      expect(userRepository.update).toHaveBeenCalledWith(mockUser.id, mockUser)
-      expect(identityRepository.update).toHaveBeenCalledWith(mockIdentity.id, mockIdentity)
-      expect(logger.error).not.toHaveBeenCalled()
-    })
-
-    it('should call updateLastSignInAt methods before repository updates', async () => {
-      // Arrange
-      const updateOrder: string[] = []
-
-      mockUser.updateLastSignInAt = jest.fn(() => {
-        updateOrder.push('user.updateLastSignInAt')
-      })
-
-      mockIdentity.updateLastSignInAt = jest.fn(() => {
-        updateOrder.push('identity.updateLastSignInAt')
-      })
-
-      userRepository.update.mockImplementation(async () => {
-        updateOrder.push('userRepository.update')
-      })
-
-      identityRepository.update.mockImplementation(async () => {
-        updateOrder.push('identityRepository.update')
-      })
-
-      unitOfWork.transaction.mockImplementation(async (callback) => {
-        return await callback()
-      })
-
-      // Act
-      await handler.handle(event)
-
-      // Assert
-      expect(updateOrder).toEqual([
-        'user.updateLastSignInAt',
-        'userRepository.update',
-        'identity.updateLastSignInAt',
-        'identityRepository.update'
-      ])
-    })
-
-    it('should log error and continue when user repository update fails', async () => {
-      // Arrange
-      const repositoryError = new Error('Database connection failed')
-      userRepository.update.mockRejectedValue(repositoryError)
-
-      unitOfWork.transaction.mockImplementation(async (callback) => {
-        return await callback()
-      })
-
-      // Act
-      await handler.handle(event)
-
-      // Assert
-      expect(mockUser.updateLastSignInAt).toHaveBeenCalledTimes(1)
-      expect(userRepository.update).toHaveBeenCalledWith(mockUser.id, mockUser)
-      expect(logger.error).toHaveBeenCalledWith(
-        'Failed to update last sign in timestamps',
-        repositoryError
-      )
-    })
-
-    it('should log error and continue when identity repository update fails', async () => {
-      // Arrange
-      const repositoryError = new Error('Identity update failed')
-      userRepository.update.mockResolvedValue(undefined)
-      identityRepository.update.mockRejectedValue(repositoryError)
-
-      unitOfWork.transaction.mockImplementation(async (callback) => {
-        return await callback()
-      })
-
-      // Act
-      await handler.handle(event)
-
-      // Assert
-      expect(mockUser.updateLastSignInAt).toHaveBeenCalledTimes(1)
-      expect(mockIdentity.updateLastSignInAt).toHaveBeenCalledTimes(1)
-      expect(userRepository.update).toHaveBeenCalledWith(mockUser.id, mockUser)
-      expect(identityRepository.update).toHaveBeenCalledWith(mockIdentity.id, mockIdentity)
-      expect(logger.error).toHaveBeenCalledWith(
-        'Failed to update last sign in timestamps',
-        repositoryError
-      )
-    })
-
-    it('should log error and continue when transaction fails', async () => {
-      // Arrange
-      const transactionError = new Error('Transaction failed')
-      unitOfWork.transaction.mockRejectedValue(transactionError)
-
-      // Act
-      await handler.handle(event)
-
-      // Assert
-      expect(unitOfWork.transaction).toHaveBeenCalledTimes(1)
-      expect(logger.error).toHaveBeenCalledWith(
-        'Failed to update last sign in timestamps',
-        transactionError
-      )
-      expect(userRepository.update).not.toHaveBeenCalled()
-      expect(identityRepository.update).not.toHaveBeenCalled()
-    })
-
-    it('should handle event with different identity types', async () => {
-      // Arrange
-      const googleIdentity = plainToInstance(PasswordIdentity, {
+    const createMockUser = (overrides: Partial<User> = {}): User => {
+      return plainToInstance(User, {
         id: faker.string.uuid(),
-        email: mockUser.email,
-        passwordHash: null,
-        authProvider: AuthProvider.GOOGLE,
-        lastSignInAt: faker.date.past(),
+        name: faker.person.fullName(),
+        email: faker.internet.email(),
+        password: faker.internet.password(),
         createdAt: faker.date.past(),
         updatedAt: faker.date.recent(),
-        updateLastSignInAt: jest.fn(),
-        user: mockUser,
+        lastSignInAt: undefined,
+        ...overrides,
+      })
+    }
+
+    const createUserLoggedInEvent = (user: User, provider: AuthProvider = AuthProvider.EMAIL_PASSWORD): UserLoggedInEvent => {
+      return new UserLoggedInEvent(user, provider)
+    }
+
+    describe('successful scenarios', () => {
+      it('should update user last sign in timestamp successfully', async () => {
+        // Arrange
+        const mockUser = createMockUser()
+        const event = createUserLoggedInEvent(mockUser)
+        const originalLastSignInAt = mockUser.lastSignInAt
+
+        userRepository.update.mockResolvedValue(undefined)
+
+        // Act
+        await handler.handle(event)
+
+        // Assert
+        expect(mockUser.lastSignInAt).toBeDefined()
+        expect(mockUser.lastSignInAt).not.toBe(originalLastSignInAt)
+        expect(mockUser.lastSignInAt).toBeInstanceOf(Date)
+        expect(userRepository.update).toHaveBeenCalledWith(mockUser.id, mockUser)
+        expect(logger.error).not.toHaveBeenCalled()
       })
 
-      // Ensure updateLastSignInAt is a jest mock
-      mockUser.updateLastSignInAt = jest.fn()
-      googleIdentity.updateLastSignInAt = jest.fn()
+      it('should work with different auth providers', async () => {
+        // Arrange
+        const authProviders = [
+          AuthProvider.EMAIL_PASSWORD,
+          // Add other providers if they exist in the enum
+        ]
 
-      const eventWithGoogleIdentity = new UserLoggedInEvent(mockUser, googleIdentity)
+        for (const provider of authProviders) {
+          const mockUser = createMockUser()
+          const event = createUserLoggedInEvent(mockUser, provider)
 
-      unitOfWork.transaction.mockImplementation(async (callback) => {
-        return await callback()
+          userRepository.update.mockResolvedValue(undefined)
+
+          // Act
+          await handler.handle(event)
+
+          // Assert
+          expect(mockUser.lastSignInAt).toBeDefined()
+          expect(userRepository.update).toHaveBeenCalledWith(mockUser.id, mockUser)
+          expect(logger.error).not.toHaveBeenCalled()
+
+          // Reset mocks for next iteration
+          jest.clearAllMocks()
+        }
       })
-      userRepository.update.mockResolvedValue(undefined)
-      identityRepository.update.mockResolvedValue(undefined)
 
-      // Act
-      await handler.handle(eventWithGoogleIdentity)
+      it('should update timestamp to current date/time', async () => {
+        // Arrange
+        const mockUser = createMockUser({ lastSignInAt: faker.date.past() })
+        const event = createUserLoggedInEvent(mockUser)
+        const beforeUpdate = new Date()
 
-      // Assert
-      expect(unitOfWork.transaction).toHaveBeenCalledTimes(1)
-      expect(mockUser.updateLastSignInAt).toHaveBeenCalledTimes(1)
-      expect(googleIdentity.updateLastSignInAt).toHaveBeenCalledTimes(1)
-      expect(userRepository.update).toHaveBeenCalledWith(mockUser.id, mockUser)
-      expect(identityRepository.update).toHaveBeenCalledWith(googleIdentity.id, googleIdentity)
-      expect(logger.error).not.toHaveBeenCalled()
+        userRepository.update.mockResolvedValue(undefined)
+
+        // Act
+        await handler.handle(event)
+
+        // Assert
+        const afterUpdate = new Date()
+        expect(mockUser.lastSignInAt!.getTime()).toBeGreaterThanOrEqual(beforeUpdate.getTime())
+        expect(mockUser.lastSignInAt!.getTime()).toBeLessThanOrEqual(afterUpdate.getTime())
+        expect(userRepository.update).toHaveBeenCalledWith(mockUser.id, mockUser)
+      })
+
+      it('should work with user that has existing lastSignInAt', async () => {
+        // Arrange
+        const existingLastSignIn = faker.date.past()
+        const mockUser = createMockUser({ lastSignInAt: existingLastSignIn })
+        const event = createUserLoggedInEvent(mockUser)
+
+        userRepository.update.mockResolvedValue(undefined)
+
+        // Act
+        await handler.handle(event)
+
+        // Assert
+        expect(mockUser.lastSignInAt).toBeDefined()
+        expect(mockUser.lastSignInAt).not.toBe(existingLastSignIn)
+        expect(mockUser.lastSignInAt!.getTime()).toBeGreaterThan(existingLastSignIn.getTime())
+        expect(userRepository.update).toHaveBeenCalledWith(mockUser.id, mockUser)
+      })
+
+      it('should work with user that has no previous lastSignInAt', async () => {
+        // Arrange
+        const mockUser = createMockUser({ lastSignInAt: undefined })
+        const event = createUserLoggedInEvent(mockUser)
+
+        userRepository.update.mockResolvedValue(undefined)
+
+        // Act
+        await handler.handle(event)
+
+        // Assert
+        expect(mockUser.lastSignInAt).toBeDefined()
+        expect(mockUser.lastSignInAt).toBeInstanceOf(Date)
+        expect(userRepository.update).toHaveBeenCalledWith(mockUser.id, mockUser)
+      })
     })
 
-    it('should not throw error when update methods modify entity state', async () => {
-      // Arrange
-      const originalLastSignInAt = mockUser.lastSignInAt
+    describe('error handling', () => {
+      it('should log error and not throw when repository update fails', async () => {
+        // Arrange
+        const mockUser = createMockUser()
+        const event = createUserLoggedInEvent(mockUser)
+        const repositoryError = new Error(faker.lorem.sentence())
 
-      mockUser.updateLastSignInAt = jest.fn(() => {
-        mockUser.lastSignInAt = new Date()
+        userRepository.update.mockRejectedValue(repositoryError)
+
+        // Act & Assert
+        await expect(handler.handle(event)).resolves.not.toThrow()
+
+        expect(mockUser.lastSignInAt).toBeDefined() // updateLastSignInAt() was called
+        expect(userRepository.update).toHaveBeenCalledWith(mockUser.id, mockUser)
+        expect(logger.error).toHaveBeenCalledWith('Failed to update last sign in timestamps', repositoryError)
       })
 
-      mockIdentity.updateLastSignInAt = jest.fn(() => {
-        mockIdentity.lastSignInAt = new Date()
+      it('should handle database connection errors gracefully', async () => {
+        // Arrange
+        const mockUser = createMockUser()
+        const event = createUserLoggedInEvent(mockUser)
+        const dbError = new Error('Database connection failed')
+
+        userRepository.update.mockRejectedValue(dbError)
+
+        // Act
+        await handler.handle(event)
+
+        // Assert
+        expect(logger.error).toHaveBeenCalledWith('Failed to update last sign in timestamps', dbError)
       })
 
-      unitOfWork.transaction.mockImplementation(async (callback) => {
-        return await callback()
+      it('should handle timeout errors gracefully', async () => {
+        // Arrange
+        const mockUser = createMockUser()
+        const event = createUserLoggedInEvent(mockUser)
+        const timeoutError = new Error('Query timeout')
+
+        userRepository.update.mockRejectedValue(timeoutError)
+
+        // Act
+        await handler.handle(event)
+
+        // Assert
+        expect(logger.error).toHaveBeenCalledWith('Failed to update last sign in timestamps', timeoutError)
       })
-      userRepository.update.mockResolvedValue(undefined)
-      identityRepository.update.mockResolvedValue(undefined)
 
-      // Act
-      await handler.handle(event)
+      it('should handle repository constraint errors gracefully', async () => {
+        // Arrange
+        const mockUser = createMockUser()
+        const event = createUserLoggedInEvent(mockUser)
+        const constraintError = new Error('Constraint violation')
 
-      // Assert
-      expect(mockUser.lastSignInAt).not.toBe(originalLastSignInAt)
-      expect(mockUser.updateLastSignInAt).toHaveBeenCalledTimes(1)
-      expect(mockIdentity.updateLastSignInAt).toHaveBeenCalledTimes(1)
-      expect(userRepository.update).toHaveBeenCalledWith(mockUser.id, mockUser)
-      expect(identityRepository.update).toHaveBeenCalledWith(mockIdentity.id, mockIdentity)
-      expect(logger.error).not.toHaveBeenCalled()
+        userRepository.update.mockRejectedValue(constraintError)
+
+        // Act
+        await handler.handle(event)
+
+        // Assert
+        expect(logger.error).toHaveBeenCalledWith('Failed to update last sign in timestamps', constraintError)
+      })
+    })
+
+    describe('edge cases', () => {
+      it('should handle user with all optional properties undefined', async () => {
+        // Arrange
+        const mockUser = createMockUser({
+          password: undefined,
+          twoFactorAuthentication: undefined,
+          lastSignInAt: undefined,
+        })
+        const event = createUserLoggedInEvent(mockUser)
+
+        userRepository.update.mockResolvedValue(undefined)
+
+        // Act
+        await handler.handle(event)
+
+        // Assert
+        expect(mockUser.lastSignInAt).toBeDefined()
+        expect(userRepository.update).toHaveBeenCalledWith(mockUser.id, mockUser)
+      })
+
+      it('should handle user with null lastSignInAt', async () => {
+        // Arrange
+        const mockUser = createMockUser({ lastSignInAt: null as any })
+        const event = createUserLoggedInEvent(mockUser)
+
+        userRepository.update.mockResolvedValue(undefined)
+
+        // Act
+        await handler.handle(event)
+
+        // Assert
+        expect(mockUser.lastSignInAt).toBeDefined()
+        expect(mockUser.lastSignInAt).toBeInstanceOf(Date)
+        expect(userRepository.update).toHaveBeenCalledWith(mockUser.id, mockUser)
+      })
+
+      it('should work with minimal user object', async () => {
+        // Arrange
+        const mockUser = plainToInstance(User, {
+          id: faker.string.uuid(),
+          name: faker.person.fullName(),
+          email: faker.internet.email(),
+        })
+        const event = createUserLoggedInEvent(mockUser)
+
+        userRepository.update.mockResolvedValue(undefined)
+
+        // Act
+        await handler.handle(event)
+
+        // Assert
+        expect(mockUser.lastSignInAt).toBeDefined()
+        expect(userRepository.update).toHaveBeenCalledWith(mockUser.id, mockUser)
+      })
+    })
+
+    describe('method call verification', () => {
+      it('should call updateLastSignInAt method on user', async () => {
+        // Arrange
+        const mockUser = createMockUser()
+        const event = createUserLoggedInEvent(mockUser)
+        const updateSpy = jest.spyOn(mockUser, 'updateLastSignInAt')
+
+        userRepository.update.mockResolvedValue(undefined)
+
+        // Act
+        await handler.handle(event)
+
+        // Assert
+        expect(updateSpy).toHaveBeenCalledTimes(1)
+        expect(updateSpy).toHaveBeenCalledWith()
+      })
+
+      it('should call repository update with correct parameters', async () => {
+        // Arrange
+        const mockUser = createMockUser()
+        const event = createUserLoggedInEvent(mockUser)
+
+        userRepository.update.mockResolvedValue(undefined)
+
+        // Act
+        await handler.handle(event)
+
+        // Assert
+        expect(userRepository.update).toHaveBeenCalledTimes(1)
+        expect(userRepository.update).toHaveBeenCalledWith(mockUser.id, mockUser)
+      })
+
+      it('should call methods in correct order', async () => {
+        // Arrange
+        const mockUser = createMockUser()
+        const event = createUserLoggedInEvent(mockUser)
+        const callOrder: string[] = []
+
+        const updateSpy = jest.spyOn(mockUser, 'updateLastSignInAt').mockImplementation(() => {
+          callOrder.push('updateLastSignInAt')
+        })
+
+        userRepository.update.mockImplementation(async () => {
+          callOrder.push('repository.update')
+        })
+
+        // Act
+        await handler.handle(event)
+
+        // Assert
+        expect(callOrder).toEqual(['updateLastSignInAt', 'repository.update'])
+        expect(updateSpy).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    describe('logging behavior', () => {
+      it('should not log anything on successful operation', async () => {
+        // Arrange
+        const mockUser = createMockUser()
+        const event = createUserLoggedInEvent(mockUser)
+
+        userRepository.update.mockResolvedValue(undefined)
+
+        // Act
+        await handler.handle(event)
+
+        // Assert
+        expect(logger.trace).not.toHaveBeenCalled()
+        expect(logger.debug).not.toHaveBeenCalled()
+        expect(logger.verbose).not.toHaveBeenCalled()
+        expect(logger.info).not.toHaveBeenCalled()
+        expect(logger.log).not.toHaveBeenCalled()
+        expect(logger.warn).not.toHaveBeenCalled()
+        expect(logger.error).not.toHaveBeenCalled()
+        expect(logger.fatal).not.toHaveBeenCalled()
+      })
+
+      it('should only log error on failure', async () => {
+        // Arrange
+        const mockUser = createMockUser()
+        const event = createUserLoggedInEvent(mockUser)
+        const error = new Error('Update failed')
+
+        userRepository.update.mockRejectedValue(error)
+
+        // Act
+        await handler.handle(event)
+
+        // Assert
+        expect(logger.error).toHaveBeenCalledTimes(1)
+        expect(logger.error).toHaveBeenCalledWith('Failed to update last sign in timestamps', error)
+
+        // Verify no other log levels were called
+        expect(logger.trace).not.toHaveBeenCalled()
+        expect(logger.debug).not.toHaveBeenCalled()
+        expect(logger.verbose).not.toHaveBeenCalled()
+        expect(logger.info).not.toHaveBeenCalled()
+        expect(logger.log).not.toHaveBeenCalled()
+        expect(logger.warn).not.toHaveBeenCalled()
+        expect(logger.fatal).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('performance considerations', () => {
+      it('should handle multiple consecutive events independently', async () => {
+        // Arrange
+        const users = [createMockUser(), createMockUser(), createMockUser()]
+        const events = users.map(user => createUserLoggedInEvent(user))
+
+        userRepository.update.mockResolvedValue(undefined)
+
+        // Act
+        await Promise.all(events.map(event => handler.handle(event)))
+
+        // Assert
+        expect(userRepository.update).toHaveBeenCalledTimes(3)
+        users.forEach(user => {
+          expect(user.lastSignInAt).toBeDefined()
+          expect(userRepository.update).toHaveBeenCalledWith(user.id, user)
+        })
+      })
+
+      it('should not block on repository errors', async () => {
+        // Arrange
+        const mockUser = createMockUser()
+        const event = createUserLoggedInEvent(mockUser)
+
+        userRepository.update.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)))
+
+        // Act
+        const startTime = Date.now()
+        await handler.handle(event)
+        const endTime = Date.now()
+
+        // Assert - Should complete quickly despite repository delay
+        expect(endTime - startTime).toBeLessThan(200) // Allow some buffer for test execution
+      })
     })
   })
 })

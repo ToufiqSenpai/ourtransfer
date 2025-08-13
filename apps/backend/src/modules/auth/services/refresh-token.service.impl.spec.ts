@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing'
 import { ConfigService } from '@nestjs/config'
-import { RefreshTokenServiceImpl } from './refresh-token.service.impl'
+import { RefreshTokenService } from './refresh-token.service'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { faker } from '@faker-js/faker'
 import { plainToInstance } from 'class-transformer'
@@ -19,7 +19,7 @@ jest.mock('crypto', () => ({
 jest.mock('useragent')
 
 describe('RefreshTokenServiceImpl', () => {
-  let service: RefreshTokenServiceImpl
+  let service: RefreshTokenService
   let textHasher: MockProxy<TextHasher>
   let configService: MockProxy<ConfigService>
   let refreshTokenRepository: MockProxy<RefreshTokenRepository>
@@ -28,7 +28,7 @@ describe('RefreshTokenServiceImpl', () => {
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       providers: [
-        RefreshTokenServiceImpl,
+        RefreshTokenService,
         {
           provide: TEXT_HASHER,
           useValue: mock<TextHasher>(),
@@ -44,7 +44,7 @@ describe('RefreshTokenServiceImpl', () => {
       ],
     }).compile()
 
-    service = module.get(RefreshTokenServiceImpl)
+    service = module.get(RefreshTokenService)
     textHasher = module.get(TEXT_HASHER)
     configService = module.get(ConfigService)
     refreshTokenRepository = module.get(RefreshTokenRepository)

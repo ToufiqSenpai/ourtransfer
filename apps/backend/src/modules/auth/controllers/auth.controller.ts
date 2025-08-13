@@ -6,8 +6,8 @@ import {
   ApiCreatedResponse,
   ApiOperation,
   ApiNotFoundResponse,
-  ApiUnauthorizedResponse, ApiForbiddenResponse,
-  ApiConflictResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
 } from "@nestjs/swagger"
 import {
   RequestVerificationFromEmailBadRequestDto,
@@ -21,8 +21,11 @@ import {
   GoogleAuthResponseDto,
   TokensDto,
   PasswordResetBadRequestDto,
-  VerifyPasswordResetBadRequestDto, LoginDto,
+  VerifyPasswordResetBadRequestDto,
+  LoginDto,
   GetProvidersBadRequestDto,
+  SendLoginVerificationCodeDto,
+  LoginUnauthorizedDto
 } from "@ourtransfer/dto"
 import { SignupValidationPipe } from '../pipes/signup-validation.pipe';
 import { SignupCommand } from '../commands/signup.command';
@@ -35,6 +38,8 @@ import { ConfigService } from "@nestjs/config"
 import { LoginValidationPipe } from '../pipes/login-validation.pipe';
 import { EmailValidationPipe } from "../../../common/pipes/email-validation.pipe";
 import { GetProvidersQuery } from "../queries/get-providers.query";
+import { SendLoginVerificationCodeCommand } from "../commands/send-login-verification-code.command";
+import { SendLoginVerificationCodePipe } from "../pipes/send-login-verification-code.pipe";
 
 @Controller({ version: "1", path: "/auth" })
 export class AuthController {
@@ -132,7 +137,7 @@ export class AuthController {
     description: "The user has been logged in successfully.",
   })
   @ApiUnauthorizedResponse({
-    type: CommonResponseDto,
+    type: LoginUnauthorizedDto,
     description: "The user is not authorized to perform this action.",
   })
   @ApiForbiddenResponse({
@@ -151,6 +156,24 @@ export class AuthController {
     res.cookie(REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken, this.getSetCookieOptions())
 
     res.status(HttpStatus.OK).json(tokens)
+  }
+
+  @Post('/login/send-verification-code')
+  @ApiOperation({
+    summary: "Send login verification code",
+    description: "This endpoint sends a verification code to the user's email address for login purposes."
+  })
+  @ApiOkResponse({
+    type: CommonResponseDto,
+    description: "The verification code has been sent successfully."
+  })
+  @ApiNotFoundResponse({
+    type: CommonResponseDto,
+    description: "The user with the given email address was not found."
+  })
+  @HttpCode(HttpStatus.OK)
+  public async sendVerificationCode(@Body(SendLoginVerificationCodePipe) dto: SendLoginVerificationCodeDto): Promise<CommonResponseDto> {
+    return this.commandBus.execute(new SendLoginVerificationCodeCommand(dto))
   }
 
   @Get("/oauth/google")

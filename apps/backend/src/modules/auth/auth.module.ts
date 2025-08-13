@@ -5,7 +5,7 @@ import { SignupHandler } from './commands/handlers/signup.handler'
 import { PASSWORD_IDENTITY_REPOSITORY } from "./repositories/password-identity.repository"
 import { REFRESH_TOKEN_REPOSITORY } from "./repositories/refresh-token.repository"
 import { REFRESH_TOKEN_SERVICE } from './services/refresh-token.service';
-import { RefreshTokenServiceImpl } from './services/refresh-token.service.impl';
+import { RefreshTokenServiceImpl } from './services/refresh-token.service';
 import { PasswordIdentityRepositoryImpl } from "./repositories/password-identity.repository.impl"
 import { RefreshTokenRepositoryImpl } from "./repositories/refresh-token.repository.impl"
 import { LoginHandler } from './commands/handlers/login.handler';
@@ -14,7 +14,8 @@ import { IDENTITY_REPOSITORY } from "./repositories/identity.repository"
 import { IdentityRepositoryImpl } from "./repositories/identity.repository.impl"
 import { IDENTITY_SERVICE } from "./services/identity.service"
 import { IdentityServiceImpl } from './services/identity.service.impl';
-import { GetProvidersHandler } from './queries/handlers/get-providers.handler';
+import { SendLoginVerificationCodeHandler } from './commands/handlers/send-login-verification-code.handler';
+import { VerificationCodeService } from './services/login-verification-code.service';
 
 @Module({
   imports: [forwardRef(() => UserModule)],
@@ -23,7 +24,7 @@ import { GetProvidersHandler } from './queries/handlers/get-providers.handler';
     // Handlers
     SignupHandler,
     LoginHandler,
-    GetProvidersHandler,
+    SendLoginVerificationCodeHandler,
 
     // Repositories
     {
@@ -50,7 +51,8 @@ import { GetProvidersHandler } from './queries/handlers/get-providers.handler';
     {
       provide: REFRESH_TOKEN_SERVICE,
       useClass: RefreshTokenServiceImpl
-    }
+    },
+    VerificationCodeService
   ],
 })
 export class AuthModule {}
