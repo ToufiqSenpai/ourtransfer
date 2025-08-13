@@ -1,36 +1,36 @@
-import { Test } from '@nestjs/testing'
-import { UnauthorizedException, ForbiddenException } from '@nestjs/common'
+import { Test, TestingModule } from '@nestjs/testing'
 import { EventBus } from '@nestjs/cqrs'
-import { LoginHandler } from './login.handler'
-import { LoginCommand } from '../login.command'
-import { TokensDto, LoginDto } from '@ourtransfer/dto'
+import { UnauthorizedException } from '@nestjs/common'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { faker } from '@faker-js/faker'
 import { plainToInstance } from 'class-transformer'
-import {
-  PASSWORD_HASHER,
-  PasswordHasher,
-} from '../../../../infrastructure/security/hash/password-hasher.interface'
-import { ACCESS_TOKEN_JWT } from '../../../../infrastructure/security/jwt/access-token-jwt.interface'
-import { Jwt } from '../../../../infrastructure/security/jwt/jwt.interface'
-import { REFRESH_TOKEN_SERVICE, RefreshTokenService } from '../../services/refresh-token.service'
-import { USER_REPOSITORY, UserRepository } from '../../../user/repositories/user.repository'
-import { PasswordIdentity } from '../../entities/password-identity.entity'
+import { LoginHandler } from './login.handler'
+import { LoginCommand } from '../login.command'
+import { LoginDto, TokensDto } from '@ourtransfer/dto'
+import { PASSWORD_HASHER, PasswordHasher } from '../../../../infrastructure/security/hash/password-hasher.interface'
+import { ACCESS_TOKEN_JWT, AccessTokenJwt } from '../../../../infrastructure/security/jwt/access-token-jwt.interface'
+import { RefreshTokenService } from '../../services/refresh-token.service'
+import { LoginVerificationCodeService } from '../../services/login-verification-code.service'
+import { TwoFactorAuthenticationService } from '../../services/two-factor-authentication.service'
+import { UserRepository } from '../../../user/repositories/user.repository'
 import { User } from '../../../user/entities/user.entity'
 import { RefreshToken } from '../../entities/refresh-token.entity'
-import { AuthProvider } from '@ourtransfer/common'
+import { TwoFactorAuthentication } from '../../entities/two-factor-authentication.entity'
 import { UserLoggedInEvent } from '../../events/user-logged-in.event'
+import { AuthProvider, AuthenticationStatus } from '@ourtransfer/common'
 
 describe('LoginHandler', () => {
   let handler: LoginHandler
   let passwordHasher: MockProxy<PasswordHasher>
-  let accessTokenJwt: MockProxy<Jwt>
+  let accessTokenJwt: MockProxy<AccessTokenJwt>
   let refreshTokenService: MockProxy<RefreshTokenService>
+  let loginVerificationCodeService: MockProxy<LoginVerificationCodeService>
+  let twoFactorAuthenticationService: MockProxy<TwoFactorAuthenticationService>
   let userRepository: MockProxy<UserRepository>
   let eventBus: MockProxy<EventBus>
 
   beforeEach(async () => {
-    const module = await Test.createTestingModule({
+    const module: TestingModule = await Test.createTestingModule({
       providers: [
         LoginHandler,
         {
@@ -39,14 +39,22 @@ describe('LoginHandler', () => {
         },
         {
           provide: ACCESS_TOKEN_JWT,
-          useValue: mock<Jwt>(),
+          useValue: mock<AccessTokenJwt>(),
         },
         {
-          provide: REFRESH_TOKEN_SERVICE,
+          provide: RefreshTokenService,
           useValue: mock<RefreshTokenService>(),
         },
         {
-          provide: USER_REPOSITORY,
+          provide: LoginVerificationCodeService,
+          useValue: mock<LoginVerificationCodeService>(),
+        },
+        {
+          provide: TwoFactorAuthenticationService,
+          useValue: mock<TwoFactorAuthenticationService>(),
+        },
+        {
+          provide: UserRepository,
           useValue: mock<UserRepository>(),
         },
         {
@@ -56,12 +64,14 @@ describe('LoginHandler', () => {
       ],
     }).compile()
 
-    handler = module.get(LoginHandler)
+    handler = module.get<LoginHandler>(LoginHandler)
     passwordHasher = module.get(PASSWORD_HASHER)
     accessTokenJwt = module.get(ACCESS_TOKEN_JWT)
-    refreshTokenService = module.get(REFRESH_TOKEN_SERVICE)
-    userRepository = module.get(USER_REPOSITORY)
-    eventBus = module.get(EventBus)
+    refreshTokenService = module.get<MockProxy<RefreshTokenService>>(RefreshTokenService)
+    loginVerificationCodeService = module.get<MockProxy<LoginVerificationCodeService>>(LoginVerificationCodeService)
+    twoFactorAuthenticationService = module.get<MockProxy<TwoFactorAuthenticationService>>(TwoFactorAuthenticationService)
+    userRepository = module.get<MockProxy<UserRepository>>(UserRepository)
+    eventBus = module.get<MockProxy<EventBus>>(EventBus)
   })
 
   afterEach(() => {
@@ -69,228 +79,497 @@ describe('LoginHandler', () => {
   })
 
   describe('execute', () => {
-    const mockLoginDto: LoginDto = {
-      email: faker.internet.email(),
-      password: faker.internet.password(),
-    }
-
     const mockUserAgent = faker.internet.userAgent()
     const mockIpAddress = faker.internet.ip()
-
-    const mockPasswordIdentity = plainToInstance(PasswordIdentity, {
-      id: faker.string.uuid(),
-      email: mockLoginDto.email,
-      passwordHash: faker.string.alphanumeric(60),
-      authProvider: AuthProvider.EMAIL_PASSWORD,
-      lastSignInAt: faker.date.past(),
-      createdAt: faker.date.past(),
-      updatedAt: faker.date.recent(),
-      updateLastSignInAt: jest.fn(),
-    })
-
-    const mockUser = plainToInstance(User, {
-      id: faker.string.uuid(),
-      name: faker.person.fullName(),
-      email: mockLoginDto.email,
-      lastSignInAt: faker.date.past(),
-      identities: [mockPasswordIdentity],
-      createdAt: faker.date.past(),
-      updatedAt: faker.date.recent(),
-      updateLastSignInAt: jest.fn(),
-    })
-
-    // Set user reference in password identity
-    mockPasswordIdentity.user = mockUser
-
     const mockAccessToken = faker.string.alphanumeric(128)
-    const mockRefreshToken = plainToInstance(RefreshToken, {
-      id: faker.string.uuid(),
-      user: mockUser,
-      token: faker.string.alphanumeric(64),
-      userAgent: mockUserAgent,
-      ipAddress: mockIpAddress,
-      revoked: false,
-      revokedAt: null,
-      expiresAt: faker.date.future(),
-      createdAt: faker.date.past(),
-      updatedAt: faker.date.recent(),
-      revoke: jest.fn(),
-    })
+    const mockRefreshTokenString = faker.string.alphanumeric(64)
 
-    // Helper function to create mock user with proper method
     const createMockUser = (overrides: Partial<User> = {}): User => {
-      const baseUser = {
-        id: mockUser.id,
-        name: mockUser.name,
-        email: mockUser.email,
-        lastSignInAt: mockUser.lastSignInAt,
-        identities: mockUser.identities,
-        createdAt: mockUser.createdAt,
-        updatedAt: mockUser.updatedAt,
-        updateLastSignInAt: jest.fn(),
+      return plainToInstance(User, {
+        id: faker.string.uuid(),
+        name: faker.person.fullName(),
+        email: faker.internet.email(),
+        password: faker.internet.password(),
+        createdAt: faker.date.past(),
+        updatedAt: faker.date.recent(),
         ...overrides,
-      }
-      return plainToInstance(User, baseUser)
+      })
     }
 
-    let command: LoginCommand
-
-    beforeEach(() => {
-      command = new LoginCommand(mockLoginDto, mockUserAgent, mockIpAddress)
-    })
-
-    afterEach(() => {
-      jest.resetAllMocks()
-      jest.restoreAllMocks()
-    })
-
-    it('should successfully login and return tokens', async () => {
-      // Arrange
-      // Use a non-EMAIL_PASSWORD provider to avoid ForbiddenException
-      const mockPasswordIdentityForSuccess = plainToInstance(PasswordIdentity, {
+    const createMockRefreshToken = (): RefreshToken => {
+      return plainToInstance(RefreshToken, {
         id: faker.string.uuid(),
-        email: mockLoginDto.email,
-        passwordHash: faker.string.alphanumeric(60),
-        authProvider: AuthProvider.GOOGLE, // Not EMAIL_PASSWORD
-        lastSignInAt: faker.date.past(),
+        token: mockRefreshTokenString,
+        userAgent: mockUserAgent,
+        ipAddress: mockIpAddress,
+        revoked: false,
+        expiresAt: faker.date.future(),
         createdAt: faker.date.past(),
         updatedAt: faker.date.recent(),
-        updateLastSignInAt: jest.fn(),
       })
-      const mockUserForSuccess = createMockUser({
-        identities: [mockPasswordIdentityForSuccess]
+    }
+
+    const createLoginCommand = (loginDto: Partial<LoginDto> = {}): LoginCommand => {
+      const defaultLoginDto = plainToInstance(LoginDto, {
+        email: faker.internet.email(),
+        password: faker.internet.password(),
+        ...loginDto,
       })
-      userRepository.findByEmail.mockResolvedValue(mockUserForSuccess)
-      passwordHasher.compare.mockResolvedValue(true)
-      accessTokenJwt.sign.mockResolvedValue(mockAccessToken)
-      refreshTokenService.create.mockResolvedValue(mockRefreshToken)
-      eventBus.publish.mockResolvedValue(undefined)
+      return new LoginCommand(defaultLoginDto, mockUserAgent, mockIpAddress)
+    }
 
-      // Act
-      const result = await handler.execute(command)
-
-      // Assert
-      expect(userRepository.findByEmail).toHaveBeenCalledWith(mockLoginDto.email)
-      expect(passwordHasher.compare).toHaveBeenCalledWith(mockLoginDto.password, mockPasswordIdentityForSuccess.passwordHash)
-      expect(accessTokenJwt.sign).toHaveBeenCalledWith(mockUserForSuccess.id)
-      expect(refreshTokenService.create).toHaveBeenCalledWith(mockUserForSuccess, mockUserAgent, mockIpAddress)
-
-      expect(eventBus.publish).toHaveBeenCalledWith(
-        expect.any(UserLoggedInEvent)
-      )
-      expect(eventBus.publish).toHaveBeenCalledWith(
-        expect.objectContaining({
-          user: mockUserForSuccess,
-          identity: mockPasswordIdentityForSuccess,
+    describe('successful login scenarios', () => {
+      it('should login successfully with email and password (no 2FA)', async () => {
+        // Arrange
+        const mockUser = createMockUser({ twoFactorAuthentication: undefined })
+        const mockRefreshToken = createMockRefreshToken()
+        const command = createLoginCommand({
+          email: mockUser.email,
+          password: 'correct-password'
         })
-      )
 
-      expect(result).toBeInstanceOf(TokensDto)
-      expect(result.accessToken).toBe(mockAccessToken)
-      expect(result.refreshToken).toBe(mockRefreshToken.token)
+        userRepository.findByEmail.mockResolvedValue(mockUser)
+        passwordHasher.compare.mockResolvedValue(true)
+        refreshTokenService.create.mockResolvedValue(mockRefreshToken)
+        accessTokenJwt.sign.mockResolvedValue(mockAccessToken)
+
+        // Act
+        const result = await handler.execute(command)
+
+        // Assert
+        expect(userRepository.findByEmail).toHaveBeenCalledWith(command.dto.email)
+        expect(passwordHasher.compare).toHaveBeenCalledWith('correct-password', mockUser.password)
+        expect(refreshTokenService.create).toHaveBeenCalledWith(mockUser, mockUserAgent, mockIpAddress)
+        expect(accessTokenJwt.sign).toHaveBeenCalledWith(mockUser.id)
+        expect(eventBus.publish).toHaveBeenCalledWith(
+          expect.any(UserLoggedInEvent)
+        )
+
+        expect(result).toBeInstanceOf(TokensDto)
+        expect(result.refreshToken).toBe(mockRefreshTokenString)
+        expect(result.accessToken).toBe(mockAccessToken)
+      })
+
+      it('should login successfully with verification code (passwordless user)', async () => {
+        // Arrange
+        const mockUser = createMockUser({
+          password: undefined,
+          twoFactorAuthentication: undefined
+        })
+        const mockRefreshToken = createMockRefreshToken()
+        const verificationCode = '123456'
+        const command = createLoginCommand({
+          email: mockUser.email,
+          verificationCode,
+          password: undefined
+        })
+
+        userRepository.findByEmail.mockResolvedValue(mockUser)
+        loginVerificationCodeService.verifyCode.mockResolvedValue(true)
+        refreshTokenService.create.mockResolvedValue(mockRefreshToken)
+        accessTokenJwt.sign.mockResolvedValue(mockAccessToken)
+
+        // Act
+        const result = await handler.execute(command)
+
+        // Assert
+        expect(userRepository.findByEmail).toHaveBeenCalledWith(command.dto.email)
+        expect(loginVerificationCodeService.verifyCode).toHaveBeenCalledWith(mockUser, verificationCode)
+        expect(passwordHasher.compare).not.toHaveBeenCalled()
+        expect(refreshTokenService.create).toHaveBeenCalledWith(mockUser, mockUserAgent, mockIpAddress)
+        expect(accessTokenJwt.sign).toHaveBeenCalledWith(mockUser.id)
+        expect(eventBus.publish).toHaveBeenCalledWith(
+          expect.any(UserLoggedInEvent)
+        )
+
+        expect(result).toBeInstanceOf(TokensDto)
+        expect(result.refreshToken).toBe(mockRefreshTokenString)
+        expect(result.accessToken).toBe(mockAccessToken)
+      })
+
+      it('should login successfully with password and 2FA', async () => {
+        // Arrange
+        const mockTwoFA = plainToInstance(TwoFactorAuthentication, {
+          id: faker.string.uuid(),
+          secret: faker.string.alphanumeric(32),
+        })
+        const mockUser = createMockUser({ twoFactorAuthentication: mockTwoFA })
+        const mockRefreshToken = createMockRefreshToken()
+        const twoFactorCode = '123456'
+        const command = createLoginCommand({
+          email: mockUser.email,
+          password: 'correct-password',
+          twoFactorCode
+        })
+
+        userRepository.findByEmail.mockResolvedValue(mockUser)
+        passwordHasher.compare.mockResolvedValue(true)
+        twoFactorAuthenticationService.verifyCode.mockResolvedValue(true)
+        refreshTokenService.create.mockResolvedValue(mockRefreshToken)
+        accessTokenJwt.sign.mockResolvedValue(mockAccessToken)
+
+        // Act
+        const result = await handler.execute(command)
+
+        // Assert
+        expect(userRepository.findByEmail).toHaveBeenCalledWith(command.dto.email)
+        expect(passwordHasher.compare).toHaveBeenCalledWith('correct-password', mockUser.password)
+        expect(twoFactorAuthenticationService.verifyCode).toHaveBeenCalledWith(mockUser.email, twoFactorCode)
+        expect(refreshTokenService.create).toHaveBeenCalledWith(mockUser, mockUserAgent, mockIpAddress)
+        expect(accessTokenJwt.sign).toHaveBeenCalledWith(mockUser.id)
+        expect(eventBus.publish).toHaveBeenCalledWith(
+          expect.any(UserLoggedInEvent)
+        )
+
+        expect(result).toBeInstanceOf(TokensDto)
+        expect(result.refreshToken).toBe(mockRefreshTokenString)
+        expect(result.accessToken).toBe(mockAccessToken)
+      })
     })
 
-    it('should throw UnauthorizedException when user is not found', async () => {
-      // Arrange
-      userRepository.findByEmail.mockResolvedValue(null)
+    describe('authentication failure scenarios', () => {
+      it('should throw UnauthorizedException when user not found', async () => {
+        // Arrange
+        const command = createLoginCommand({ email: 'nonexistent@example.com' })
+        userRepository.findByEmail.mockResolvedValue(null)
 
-      // Act & Assert
-      await expect(handler.execute(command)).rejects.toThrow(UnauthorizedException)
-      await expect(handler.execute(command)).rejects.toThrow(
-        expect.objectContaining({
-          response: expect.objectContaining({
-            message: 'Email or password is incorrect.',
+        // Act & Assert
+        await expect(handler.execute(command)).rejects.toThrow(
+          new UnauthorizedException({
+            status: AuthenticationStatus.USER_NOT_FOUND,
+            message: 'Invalid credentials',
           })
-        })
-      )
+        )
 
-      expect(userRepository.findByEmail).toHaveBeenCalledWith(mockLoginDto.email)
-      expect(passwordHasher.compare).not.toHaveBeenCalled()
-      expect(accessTokenJwt.sign).not.toHaveBeenCalled()
-      expect(refreshTokenService.create).not.toHaveBeenCalled()
-      expect(eventBus.publish).not.toHaveBeenCalled()
-    })
-
-    it('should throw ForbiddenException when user has EMAIL_PASSWORD identity', async () => {
-      // Arrange
-      const userWithEmailPasswordIdentity = createMockUser({
-        identities: [{ authProvider: AuthProvider.EMAIL_PASSWORD } as any]
+        expect(userRepository.findByEmail).toHaveBeenCalledWith(command.dto.email)
+        expect(passwordHasher.compare).not.toHaveBeenCalled()
+        expect(eventBus.publish).not.toHaveBeenCalled()
       })
-      userRepository.findByEmail.mockResolvedValue(userWithEmailPasswordIdentity)
 
-      // Act & Assert
-      await expect(handler.execute(command)).rejects.toThrow(ForbiddenException)
-      await expect(handler.execute(command)).rejects.toThrow(
-        expect.objectContaining({
-          response: expect.objectContaining({
-            message: "Unsupported authentication method. Please use a different login method."
+      it('should throw UnauthorizedException when verification code is required but not provided', async () => {
+        // Arrange
+        const mockUser = createMockUser({ password: undefined })
+        const command = createLoginCommand({
+          email: mockUser.email,
+          password: undefined,
+          verificationCode: undefined
+        })
+        userRepository.findByEmail.mockResolvedValue(mockUser)
+
+        // Act & Assert
+        await expect(handler.execute(command)).rejects.toThrow(
+          new UnauthorizedException({
+            status: AuthenticationStatus.INVALID_VERIFICATION_CODE,
+            message: 'Verification code is required for login',
           })
+        )
+
+        expect(userRepository.findByEmail).toHaveBeenCalledWith(command.dto.email)
+        expect(loginVerificationCodeService.verifyCode).not.toHaveBeenCalled()
+        expect(eventBus.publish).not.toHaveBeenCalled()
+      })
+
+      it('should throw UnauthorizedException when verification code is invalid', async () => {
+        // Arrange
+        const mockUser = createMockUser({ password: undefined })
+        const command = createLoginCommand({
+          email: mockUser.email,
+          verificationCode: 'invalid-code',
+          password: undefined
         })
-      )
+        userRepository.findByEmail.mockResolvedValue(mockUser)
+        loginVerificationCodeService.verifyCode.mockResolvedValue(false)
 
-      expect(passwordHasher.compare).not.toHaveBeenCalled()
-      expect(accessTokenJwt.sign).not.toHaveBeenCalled()
-      expect(refreshTokenService.create).not.toHaveBeenCalled()
-      expect(eventBus.publish).not.toHaveBeenCalled()
-    })
+        // Act & Assert
+        await expect(handler.execute(command)).rejects.toThrow(
+          new UnauthorizedException({
+            status: AuthenticationStatus.INVALID_VERIFICATION_CODE,
+            message: 'Invalid verification code',
+          })
+        )
 
-    it('should throw ForbiddenException when user has no identities', async () => {
-      // Arrange
-      const userWithoutIdentities = createMockUser({ identities: [] })
-      userRepository.findByEmail.mockResolvedValue(userWithoutIdentities)
-
-      // Act & Assert
-      await expect(handler.execute(command)).rejects.toThrow(UnauthorizedException)
-
-      expect(passwordHasher.compare).not.toHaveBeenCalled()
-      expect(accessTokenJwt.sign).not.toHaveBeenCalled()
-      expect(refreshTokenService.create).not.toHaveBeenCalled()
-      expect(eventBus.publish).not.toHaveBeenCalled()
-    })
-
-    it('should throw ForbiddenException when user identities is undefined', async () => {
-      // Arrange
-      const userWithUndefinedIdentities = createMockUser({ identities: undefined })
-      userRepository.findByEmail.mockResolvedValue(userWithUndefinedIdentities)
-
-      // Act & Assert
-      await expect(handler.execute(command)).rejects.toThrow(ForbiddenException)
-
-      expect(passwordHasher.compare).not.toHaveBeenCalled()
-      expect(accessTokenJwt.sign).not.toHaveBeenCalled()
-      expect(refreshTokenService.create).not.toHaveBeenCalled()
-      expect(eventBus.publish).not.toHaveBeenCalled()
-    })
-
-    it('should throw UnauthorizedException when password is incorrect', async () => {
-      // Arrange
-      // Note: Using a different auth provider to avoid the ForbiddenException check
-      // This test focuses on the password validation logic
-      const mockPasswordIdentityForTest = plainToInstance(PasswordIdentity, {
-        id: faker.string.uuid(),
-        email: mockLoginDto.email,
-        passwordHash: faker.string.alphanumeric(60),
-        authProvider: AuthProvider.GOOGLE, // Using GOOGLE instead of EMAIL_PASSWORD
-        lastSignInAt: faker.date.past(),
-        createdAt: faker.date.past(),
-        updatedAt: faker.date.recent(),
-        updateLastSignInAt: jest.fn(),
+        expect(userRepository.findByEmail).toHaveBeenCalledWith(command.dto.email)
+        expect(loginVerificationCodeService.verifyCode).toHaveBeenCalledWith(mockUser, 'invalid-code')
+        expect(eventBus.publish).not.toHaveBeenCalled()
       })
 
-      const userWithValidIdentities = createMockUser({
-        identities: [mockPasswordIdentityForTest]
+      it('should throw UnauthorizedException when password is incorrect', async () => {
+        // Arrange
+        const mockUser = createMockUser({ twoFactorAuthentication: undefined })
+        const command = createLoginCommand({
+          email: mockUser.email,
+          password: 'wrong-password'
+        })
+        userRepository.findByEmail.mockResolvedValue(mockUser)
+        passwordHasher.compare.mockResolvedValue(false)
+
+        // Act & Assert
+        await expect(handler.execute(command)).rejects.toThrow(
+          new UnauthorizedException({
+            status: AuthenticationStatus.INVALID_CREDENTIALS,
+            message: 'Invalid email or password',
+          })
+        )
+
+        expect(userRepository.findByEmail).toHaveBeenCalledWith(command.dto.email)
+        expect(passwordHasher.compare).toHaveBeenCalledWith('wrong-password', mockUser.password)
+        expect(eventBus.publish).not.toHaveBeenCalled()
       })
-      userRepository.findByEmail.mockResolvedValue(userWithValidIdentities)
-      passwordHasher.compare.mockResolvedValue(false)
 
-      // Act & Assert
-      await expect(handler.execute(command)).rejects.toThrow(UnauthorizedException)
-      await expect(handler.execute(command)).rejects.toThrow('Email or password is incorrect.')
+      it('should throw UnauthorizedException when 2FA code is required but not provided', async () => {
+        // Arrange
+        const mockTwoFA = plainToInstance(TwoFactorAuthentication, {
+          id: faker.string.uuid(),
+          secret: faker.string.alphanumeric(32),
+        })
+        const mockUser = createMockUser({ twoFactorAuthentication: mockTwoFA })
+        const command = createLoginCommand({
+          email: mockUser.email,
+          password: 'correct-password',
+          twoFactorCode: undefined
+        })
+        userRepository.findByEmail.mockResolvedValue(mockUser)
+        passwordHasher.compare.mockResolvedValue(true)
 
-      expect(passwordHasher.compare).toHaveBeenCalledWith(command.dto.password, mockPasswordIdentityForTest.passwordHash)
-      expect(accessTokenJwt.sign).not.toHaveBeenCalled()
-      expect(refreshTokenService.create).not.toHaveBeenCalled()
-      expect(eventBus.publish).not.toHaveBeenCalled()
+        // Act & Assert
+        await expect(handler.execute(command)).rejects.toThrow(
+          new UnauthorizedException({
+            status: AuthenticationStatus.INVALID_2FA_CODE,
+            message: 'Two-factor authentication code is required',
+          })
+        )
+
+        expect(userRepository.findByEmail).toHaveBeenCalledWith(command.dto.email)
+        expect(passwordHasher.compare).toHaveBeenCalledWith('correct-password', mockUser.password)
+        expect(twoFactorAuthenticationService.verifyCode).not.toHaveBeenCalled()
+        expect(eventBus.publish).not.toHaveBeenCalled()
+      })
+
+      it('should throw UnauthorizedException when 2FA code is invalid', async () => {
+        // Arrange
+        const mockTwoFA = plainToInstance(TwoFactorAuthentication, {
+          id: faker.string.uuid(),
+          secret: faker.string.alphanumeric(32),
+        })
+        const mockUser = createMockUser({ twoFactorAuthentication: mockTwoFA })
+        const command = createLoginCommand({
+          email: mockUser.email,
+          password: 'correct-password',
+          twoFactorCode: 'invalid-2fa-code'
+        })
+        userRepository.findByEmail.mockResolvedValue(mockUser)
+        passwordHasher.compare.mockResolvedValue(true)
+        twoFactorAuthenticationService.verifyCode.mockResolvedValue(false)
+
+        // Act & Assert
+        await expect(handler.execute(command)).rejects.toThrow(
+          new UnauthorizedException({
+            status: AuthenticationStatus.INVALID_2FA_CODE,
+            message: 'Invalid two-factor authentication code',
+          })
+        )
+
+        expect(userRepository.findByEmail).toHaveBeenCalledWith(command.dto.email)
+        expect(passwordHasher.compare).toHaveBeenCalledWith('correct-password', mockUser.password)
+        expect(twoFactorAuthenticationService.verifyCode).toHaveBeenCalledWith(mockUser.email, 'invalid-2fa-code')
+        expect(eventBus.publish).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('error handling', () => {
+      it('should propagate errors from userRepository.findByEmail', async () => {
+        // Arrange
+        const command = createLoginCommand()
+        const repositoryError = new Error(faker.lorem.sentence())
+        userRepository.findByEmail.mockRejectedValue(repositoryError)
+
+        // Act & Assert
+        await expect(handler.execute(command)).rejects.toThrow(repositoryError)
+      })
+
+      it('should propagate errors from passwordHasher.compare', async () => {
+        // Arrange
+        const mockUser = createMockUser()
+        const command = createLoginCommand({ email: mockUser.email })
+        const hashError = new Error(faker.lorem.sentence())
+        userRepository.findByEmail.mockResolvedValue(mockUser)
+        passwordHasher.compare.mockRejectedValue(hashError)
+
+        // Act & Assert
+        await expect(handler.execute(command)).rejects.toThrow(hashError)
+      })
+
+      it('should propagate errors from loginVerificationCodeService.verifyCode', async () => {
+        // Arrange
+        const mockUser = createMockUser({ password: undefined })
+        const command = createLoginCommand({
+          email: mockUser.email,
+          verificationCode: '123456',
+          password: undefined
+        })
+        const verificationError = new Error(faker.lorem.sentence())
+        userRepository.findByEmail.mockResolvedValue(mockUser)
+        loginVerificationCodeService.verifyCode.mockRejectedValue(verificationError)
+
+        // Act & Assert
+        await expect(handler.execute(command)).rejects.toThrow(verificationError)
+      })
+
+      it('should propagate errors from twoFactorAuthenticationService.verifyCode', async () => {
+        // Arrange
+        const mockTwoFA = plainToInstance(TwoFactorAuthentication, {
+          id: faker.string.uuid(),
+          secret: faker.string.alphanumeric(32),
+        })
+        const mockUser = createMockUser({ twoFactorAuthentication: mockTwoFA })
+        const command = createLoginCommand({
+          email: mockUser.email,
+          password: 'correct-password',
+          twoFactorCode: '123456'
+        })
+        const twoFAError = new Error(faker.lorem.sentence())
+        userRepository.findByEmail.mockResolvedValue(mockUser)
+        passwordHasher.compare.mockResolvedValue(true)
+        twoFactorAuthenticationService.verifyCode.mockRejectedValue(twoFAError)
+
+        // Act & Assert
+        await expect(handler.execute(command)).rejects.toThrow(twoFAError)
+      })
+
+      it('should propagate errors from refreshTokenService.create', async () => {
+        // Arrange
+        const mockUser = createMockUser()
+        const command = createLoginCommand({ email: mockUser.email })
+        const refreshTokenError = new Error(faker.lorem.sentence())
+        userRepository.findByEmail.mockResolvedValue(mockUser)
+        passwordHasher.compare.mockResolvedValue(true)
+        refreshTokenService.create.mockRejectedValue(refreshTokenError)
+
+        // Act & Assert
+        await expect(handler.execute(command)).rejects.toThrow(refreshTokenError)
+      })
+
+      it('should propagate errors from accessTokenJwt.sign', async () => {
+        // Arrange
+        const mockUser = createMockUser()
+        const mockRefreshToken = createMockRefreshToken()
+        const command = createLoginCommand({ email: mockUser.email })
+        const accessTokenError = new Error(faker.lorem.sentence())
+        userRepository.findByEmail.mockResolvedValue(mockUser)
+        passwordHasher.compare.mockResolvedValue(true)
+        refreshTokenService.create.mockResolvedValue(mockRefreshToken)
+        accessTokenJwt.sign.mockRejectedValue(accessTokenError)
+
+        // Act & Assert
+        await expect(handler.execute(command)).rejects.toThrow(accessTokenError)
+      })
+    })
+
+    describe('edge cases', () => {
+      it('should handle user without password and without 2FA', async () => {
+        // Arrange
+        const mockUser = createMockUser({
+          password: undefined,
+          twoFactorAuthentication: undefined
+        })
+        const mockRefreshToken = createMockRefreshToken()
+        const command = createLoginCommand({
+          email: mockUser.email,
+          verificationCode: '123456',
+          password: undefined
+        })
+
+        userRepository.findByEmail.mockResolvedValue(mockUser)
+        loginVerificationCodeService.verifyCode.mockResolvedValue(true)
+        refreshTokenService.create.mockResolvedValue(mockRefreshToken)
+        accessTokenJwt.sign.mockResolvedValue(mockAccessToken)
+
+        // Act
+        const result = await handler.execute(command)
+
+        // Assert
+        expect(passwordHasher.compare).not.toHaveBeenCalled()
+        expect(twoFactorAuthenticationService.verifyCode).not.toHaveBeenCalled()
+        expect(result).toBeInstanceOf(TokensDto)
+        expect(result.refreshToken).toBe(mockRefreshTokenString)
+        expect(result.accessToken).toBe(mockAccessToken)
+      })
+
+      it('should handle user with password but without 2FA', async () => {
+        // Arrange
+        const mockUser = createMockUser({ twoFactorAuthentication: undefined })
+        const mockRefreshToken = createMockRefreshToken()
+        const command = createLoginCommand({
+          email: mockUser.email,
+          password: 'correct-password'
+        })
+
+        userRepository.findByEmail.mockResolvedValue(mockUser)
+        passwordHasher.compare.mockResolvedValue(true)
+        refreshTokenService.create.mockResolvedValue(mockRefreshToken)
+        accessTokenJwt.sign.mockResolvedValue(mockAccessToken)
+
+        // Act
+        const result = await handler.execute(command)
+
+        // Assert
+        expect(passwordHasher.compare).toHaveBeenCalledWith('correct-password', mockUser.password)
+        expect(twoFactorAuthenticationService.verifyCode).not.toHaveBeenCalled()
+        expect(result).toBeInstanceOf(TokensDto)
+        expect(result.refreshToken).toBe(mockRefreshTokenString)
+        expect(result.accessToken).toBe(mockAccessToken)
+      })
+
+      it('should handle user with undefined twoFactorAuthentication property', async () => {
+        // Arrange
+        const mockUser = createMockUser({ twoFactorAuthentication: undefined })
+        const mockRefreshToken = createMockRefreshToken()
+        const command = createLoginCommand({
+          email: mockUser.email,
+          password: 'correct-password'
+        })
+
+        userRepository.findByEmail.mockResolvedValue(mockUser)
+        passwordHasher.compare.mockResolvedValue(true)
+        refreshTokenService.create.mockResolvedValue(mockRefreshToken)
+        accessTokenJwt.sign.mockResolvedValue(mockAccessToken)
+
+        // Act
+        const result = await handler.execute(command)
+
+        // Assert
+        expect(twoFactorAuthenticationService.verifyCode).not.toHaveBeenCalled()
+        expect(result).toBeInstanceOf(TokensDto)
+        expect(result.refreshToken).toBe(mockRefreshTokenString)
+        expect(result.accessToken).toBe(mockAccessToken)
+      })
+    })
+
+    describe('event publishing', () => {
+      it('should publish UserLoggedInEvent with correct parameters', async () => {
+        // Arrange
+        const mockUser = createMockUser({ twoFactorAuthentication: undefined })
+        const mockRefreshToken = createMockRefreshToken()
+        const command = createLoginCommand({
+          email: mockUser.email,
+          password: 'correct-password'
+        })
+
+        userRepository.findByEmail.mockResolvedValue(mockUser)
+        passwordHasher.compare.mockResolvedValue(true)
+        refreshTokenService.create.mockResolvedValue(mockRefreshToken)
+        accessTokenJwt.sign.mockResolvedValue(mockAccessToken)
+
+        // Act
+        await handler.execute(command)
+
+        // Assert
+        expect(eventBus.publish).toHaveBeenCalledTimes(1)
+        const publishedEvent = eventBus.publish.mock.calls[0][0] as UserLoggedInEvent
+        expect(publishedEvent).toBeInstanceOf(UserLoggedInEvent)
+        expect(publishedEvent.user).toBe(mockUser)
+        expect(publishedEvent.provider).toBe(AuthProvider.EMAIL_PASSWORD)
+      })
     })
   })
 })

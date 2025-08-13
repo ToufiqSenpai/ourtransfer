@@ -1,79 +1,95 @@
 import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs'
-import { ForbiddenException, Inject, UnauthorizedException } from "@nestjs/common"
+import { Inject, UnauthorizedException } from "@nestjs/common"
 import { LoginCommand } from '../login.command'
-import { TokensDto, CommonResponseDto } from '@ourtransfer/dto'
+import { TokensDto } from '@ourtransfer/dto'
 import {
   PASSWORD_HASHER,
   PasswordHasher,
 } from '../../../../infrastructure/security/hash/password-hasher.interface'
-import { plainToInstance } from 'class-transformer'
-import { ACCESS_TOKEN_JWT } from '../../../../infrastructure/security/jwt/access-token-jwt.interface'
-import { Jwt } from '../../../../infrastructure/security/jwt/jwt.interface'
-import { REFRESH_TOKEN_SERVICE, RefreshTokenService } from '../../services/refresh-token.service'
-import { USER_REPOSITORY, UserRepository } from '../../../user/repositories/user.repository';
-import { PasswordIdentity } from "../../entities/password-identity.entity"
-import { AuthProvider } from '@ourtransfer/common'
+import { ACCESS_TOKEN_JWT, AccessTokenJwt } from '../../../../infrastructure/security/jwt/access-token-jwt.interface'
+import { RefreshTokenService } from '../../services/refresh-token.service'
+import { UserRepository } from '../../../user/repositories/user.repository';
+import { LoginVerificationCodeService } from '../../services/login-verification-code.service'
+import { TwoFactorAuthenticationService } from '../../services/two-factor-authentication.service'
 import { UserLoggedInEvent } from '../../events/user-logged-in.event'
+import { AuthProvider, AuthenticationStatus } from '@ourtransfer/common'
 
 @CommandHandler(LoginCommand)
 export class LoginHandler implements ICommandHandler<LoginCommand> {
   public constructor(
     @Inject(PASSWORD_HASHER) private readonly passwordHasher: PasswordHasher,
-    @Inject(ACCESS_TOKEN_JWT) private readonly accessToken: Jwt,
-    @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService: RefreshTokenService,
-    @Inject(USER_REPOSITORY) private readonly userRepository: UserRepository,
+    @Inject(ACCESS_TOKEN_JWT) private readonly accessToken: AccessTokenJwt,
+    private readonly refreshTokenService: RefreshTokenService,
+    private readonly loginVerificationCodeService: LoginVerificationCodeService,
+    private readonly twoFactorAuthenticationService: TwoFactorAuthenticationService,
+    private readonly userRepository: UserRepository,
     private readonly eventBus: EventBus
   ) {}
 
   public async execute(command: LoginCommand): Promise<TokensDto> {
-    // Get user with password identity
-    const user = await this.userRepository.findByEmail(command.dto.email)
+    const loginDto = command.dto
+    const user = await this.userRepository.findByEmail(loginDto.email)
 
     if (!user) {
-      throw new UnauthorizedException(plainToInstance(CommonResponseDto, {
-        message: 'Email or password is incorrect.',
-      }))
+      throw new UnauthorizedException({
+        status: AuthenticationStatus.USER_NOT_FOUND,
+        message: 'Invalid credentials',
+      })
     }
 
-    // Check for identities existence
-    if (!user.identities || user.identities.some(identity => identity.authProvider === AuthProvider.EMAIL_PASSWORD)) {
-      throw new ForbiddenException(plainToInstance(CommonResponseDto, {
-        message: "Unsupported authentication method. Please use a different login method."
-      }))
+    if (!user.password) {
+      if (loginDto.verificationCode) {
+        const isValid = await this.loginVerificationCodeService.verifyCode(user, loginDto.verificationCode)
+
+        if (!isValid) {
+          throw new UnauthorizedException({
+            status: AuthenticationStatus.INVALID_VERIFICATION_CODE,
+            message: 'Invalid verification code',
+          })
+        }
+      } else {
+        throw new UnauthorizedException({
+          status: AuthenticationStatus.INVALID_VERIFICATION_CODE,
+          message: 'Verification code is required for login',
+        })
+      }
     }
 
-    // Find password identity safely
-    const passwordIdentity = user.identities.find(identity => identity instanceof PasswordIdentity)
-    if (!passwordIdentity || !(passwordIdentity instanceof PasswordIdentity)) {
-      throw new UnauthorizedException(plainToInstance(CommonResponseDto, {
-        message: 'Email or password is incorrect.',
-      }))
+    if (user.password) {
+      const isValid = await this.passwordHasher.compare(loginDto.password!, user.password);
+
+      if (!isValid) {
+        throw new UnauthorizedException({
+          status: AuthenticationStatus.INVALID_CREDENTIALS,
+          message: 'Invalid email or password',
+        });
+      }
     }
 
-    // Ensure password hash exists
-    if (!passwordIdentity.passwordHash || !passwordIdentity.passwordHash.trim()) {
-      throw new UnauthorizedException(plainToInstance(CommonResponseDto, {
-        message: 'Email or password is incorrect.',
-      }))
+    if (user.twoFactorAuthentication) {
+      if (!loginDto.twoFactorCode) {
+        throw new UnauthorizedException({
+          status: AuthenticationStatus.INVALID_2FA_CODE,
+          message: 'Two-factor authentication code is required',
+        });
+      }
+
+      const isValid2FA = await this.twoFactorAuthenticationService.verifyCode(user.email, loginDto.twoFactorCode);
+
+      if (!isValid2FA) {
+        throw new UnauthorizedException({
+          status: AuthenticationStatus.INVALID_2FA_CODE,
+          message: 'Invalid two-factor authentication code',
+        });
+      }
     }
 
-    // Verify password
-    const isPasswordValid = await this.passwordHasher.compare(command.dto.password, passwordIdentity.passwordHash)
-    if (!isPasswordValid) {
-      throw new UnauthorizedException(plainToInstance(CommonResponseDto, {
-        message: 'Email or password is incorrect.',
-      }))
-    }
-
-    // Generate tokens
-    const accessToken = await this.accessToken.sign(user.id)
     const refreshToken = await this.refreshTokenService.create(user, command.userAgent, command.ipAddress)
-
-    this.eventBus.publish(new UserLoggedInEvent(user, passwordIdentity))
-
     const tokens = new TokensDto()
-    tokens.accessToken = accessToken
     tokens.refreshToken = refreshToken.token
+    tokens.accessToken = await this.accessToken.sign(user.id)
+
+    this.eventBus.publish(new UserLoggedInEvent(user, AuthProvider.EMAIL_PASSWORD))
 
     return tokens
   }

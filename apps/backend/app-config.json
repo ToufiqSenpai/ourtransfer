@@ -1,7 +1,13 @@
 {
   "app": {
     "port": 8081,
-    "domain": "127.0.0.1"
+    "domain": "127.0.0.1",
+    "name": "OurTransfer"
+  },
+  "auth": {
+    "loginVerificationCode": {
+      "expiresIn": 300
+    }
   },
   "email": {
     "from": "noreply@ourtransfer.com"
