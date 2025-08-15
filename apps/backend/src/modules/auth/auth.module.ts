@@ -2,20 +2,16 @@ import { forwardRef, Module } from '@nestjs/common'
 import { UserModule } from '../user/user.module';
 import { AuthController } from './controllers/auth.controller'
 import { SignupHandler } from './commands/handlers/signup.handler'
-import { PASSWORD_IDENTITY_REPOSITORY } from "./repositories/password-identity.repository"
-import { REFRESH_TOKEN_REPOSITORY } from "./repositories/refresh-token.repository"
-import { REFRESH_TOKEN_SERVICE } from './services/refresh-token.service';
-import { RefreshTokenServiceImpl } from './services/refresh-token.service';
-import { PasswordIdentityRepositoryImpl } from "./repositories/password-identity.repository.impl"
-import { RefreshTokenRepositoryImpl } from "./repositories/refresh-token.repository.impl"
 import { LoginHandler } from './commands/handlers/login.handler';
 import { AuthMapper } from './mappers/auth.mapper';
-import { IDENTITY_REPOSITORY } from "./repositories/identity.repository"
-import { IdentityRepositoryImpl } from "./repositories/identity.repository.impl"
-import { IDENTITY_SERVICE } from "./services/identity.service"
-import { IdentityServiceImpl } from './services/identity.service.impl';
 import { SendLoginVerificationCodeHandler } from './commands/handlers/send-login-verification-code.handler';
-import { VerificationCodeService } from './services/login-verification-code.service';
+import { LoginVerificationCodeService } from './services/login-verification-code.service';
+import { LoginVerificationCodeRepository } from './repositories/login-verification-code.repository';
+import { RefreshTokenRepository } from './repositories/refresh-token.repository';
+import { RefreshTokenService } from './services/refresh-token.service';
+import { TwoFactorAuthenticationService } from './services/two-factor-authentication.service';
+import { GoogleOAuth2Service } from './services/google-oauth2.service';
+import { GetGoogleAuthUrlHandler } from './queries/handlers/get-google-auth-url.handler';
 
 @Module({
   imports: [forwardRef(() => UserModule)],
@@ -25,34 +21,20 @@ import { VerificationCodeService } from './services/login-verification-code.serv
     SignupHandler,
     LoginHandler,
     SendLoginVerificationCodeHandler,
+    GetGoogleAuthUrlHandler,
 
     // Repositories
-    {
-      provide: IDENTITY_REPOSITORY,
-      useClass: IdentityRepositoryImpl,
-    },
-    {
-      provide: PASSWORD_IDENTITY_REPOSITORY,
-      useClass: PasswordIdentityRepositoryImpl,
-    },
-    {
-      provide: REFRESH_TOKEN_REPOSITORY,
-      useClass: RefreshTokenRepositoryImpl
-    },
+    LoginVerificationCodeRepository,
+    RefreshTokenRepository,
 
     // Mappers
     AuthMapper,
 
     // Services
-    {
-      provide: IDENTITY_SERVICE,
-      useClass: IdentityServiceImpl,
-    },
-    {
-      provide: REFRESH_TOKEN_SERVICE,
-      useClass: RefreshTokenServiceImpl
-    },
-    VerificationCodeService
+    GoogleOAuth2Service,
+    LoginVerificationCodeService,
+    RefreshTokenService,
+    TwoFactorAuthenticationService,
   ],
 })
 export class AuthModule {}

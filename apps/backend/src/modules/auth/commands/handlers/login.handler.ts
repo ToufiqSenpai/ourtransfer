@@ -12,7 +12,7 @@ import { UserRepository } from '../../../user/repositories/user.repository';
 import { LoginVerificationCodeService } from '../../services/login-verification-code.service'
 import { TwoFactorAuthenticationService } from '../../services/two-factor-authentication.service'
 import { UserLoggedInEvent } from '../../events/user-logged-in.event'
-import { AuthProvider, AuthenticationStatus } from '@ourtransfer/common'
+import { AuthenticationStatus } from '@ourtransfer/common'
 
 @CommandHandler(LoginCommand)
 export class LoginHandler implements ICommandHandler<LoginCommand> {
@@ -89,7 +89,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
     tokens.refreshToken = refreshToken.token
     tokens.accessToken = await this.accessToken.sign(user.id)
 
-    this.eventBus.publish(new UserLoggedInEvent(user, AuthProvider.EMAIL_PASSWORD))
+    this.eventBus.publish(new UserLoggedInEvent(user))
 
     return tokens
   }

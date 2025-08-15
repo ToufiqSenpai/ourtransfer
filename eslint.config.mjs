@@ -151,7 +151,7 @@ export default tseslint.config(
         },
         {
           selector: "typeProperty",
-          format: ["camelCase"],
+          format: ["camelCase", "snake_case"],
         },
         {
           selector: "variable",

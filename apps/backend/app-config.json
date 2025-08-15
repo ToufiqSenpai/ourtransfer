@@ -1,7 +1,7 @@
 {
   "app": {
     "port": 8081,
-    "domain": "127.0.0.1",
+    "domain": "localhost",
     "name": "OurTransfer"
   },
   "auth": {
@@ -41,7 +41,8 @@
   },
   "client": {
     "web": {
-      "url": "http://locahost:4000"
+      "url": "http://locahost:4000",
+      "oauth2Redirect": "http://localhost:4000/oauth2/callback"
     }
   }
 }

@@ -6,8 +6,7 @@ import { NodeEnv } from "@ourtransfer/common"
 import { TypeOrmLogger } from "./typeorm.logger"
 import { User } from '../../modules/user/entities/user.entity';
 import { RefreshToken } from '../../modules/auth/entities/refresh-token.entity';
-import { TRANSACTION_CONTEXT_SERVICE } from "./unit-of-work/transaction-context.service"
-import { TransactionContextServiceImpl } from "./unit-of-work/transaction-context.service.impl"
+import { TransactionContextService } from "./unit-of-work/transaction-context.service"
 import { UNIT_OF_WORK } from "./unit-of-work/unit-of-work.interface"
 import { UnitOfWorkImpl } from "./unit-of-work/unit-of-work.impl"
 import { ProviderUtil } from "../utils/provider.util"
@@ -39,15 +38,12 @@ import { TwoFactorAuthentication } from "../../modules/auth/entities/two-factor-
   providers: [
     TypeOrmLogger,
     ProviderUtil,
-    {
-      provide: TRANSACTION_CONTEXT_SERVICE,
-      useClass: TransactionContextServiceImpl,
-    },
+    TransactionContextService,
     {
       provide: UNIT_OF_WORK,
       useClass: UnitOfWorkImpl
     }
   ],
-  exports: [TypeOrmLogger, UNIT_OF_WORK, TRANSACTION_CONTEXT_SERVICE, ProviderUtil],
+  exports: [TypeOrmLogger, UNIT_OF_WORK, TransactionContextService, ProviderUtil],
 })
 export class DatabaseModule {}

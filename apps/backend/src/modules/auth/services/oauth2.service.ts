@@ -1,31 +1,40 @@
-import { AuthProvider } from "@ourtransfer/common";
 import { Cache } from "../../../infrastructure/cache/cache.interface";
-import { OAuthAction } from "../enums/oauth-action.enum";
-import { BadRequestException } from "@nestjs/common";
+import { BadRequestException, NotImplementedException } from "@nestjs/common";
 import { plainToInstance } from "class-transformer";
-import { CommonResponseDto } from "@ourtransfer/dto";
+import { CommonResponseDto, CreateUserDto } from "@ourtransfer/dto";
 import { randomBytes, createHash } from 'crypto';
 import { UserService } from "../../user/services/user.service";
 import { HttpService } from "@nestjs/axios";
 import { firstValueFrom } from "rxjs";
 import { Readable } from "stream";
+import { UserRepository } from "../../user/repositories/user.repository";
+import { User } from "../../user/entities/user.entity";
+import { OAuth2Provider } from "../enums/oauth2-provider.enum";
+import { OAuth2Platform } from "../enums/oauth2-platform.enum";
 
-export abstract class OAuthService {
+export abstract class OAuth2Service {
   public constructor(
     protected readonly cache: Cache,
     protected readonly userService: UserService,
+    protected readonly userRepository: UserRepository,
     protected readonly http: HttpService
   ) {}
 
-  protected abstract get provider(): AuthProvider
+  protected abstract get provider(): OAuth2Provider
 
   protected abstract get supportsPKCE(): boolean
 
-  protected abstract buildAuthUrl(state: string, codeChallenge?: string): string
+  protected abstract buildAuthUrl(state: string, codeChallenge?: string): Promise<string> | string
 
-  protected abstract getUserProfile(accessToken: string, codeVerifier?: string): Promise<UserProfile>
+  protected abstract getUserProfile(code: string): Promise<UserProfile>
 
-  public async getAuthUrl(action: OAuthAction): Promise<string> {
+  public async getAuthUrl(platform: OAuth2Platform): Promise<string> {
+    if (![OAuth2Platform.WEB].includes(platform)) {
+      throw new NotImplementedException(plainToInstance(CommonResponseDto, {
+        message: `${platform} OAuth2 platform currently not supported.`
+      }))
+    }
+
     // Generate secure state parameter
     const state = this.generateSecureState();
 
@@ -42,7 +51,7 @@ export abstract class OAuthService {
     const session: OAuthSession = {
       state,
       provider: this.provider,
-      action,
+      platform,
       ...(codeVerifier && { codeVerifier })
     };
 
@@ -52,7 +61,7 @@ export abstract class OAuthService {
     return this.buildAuthUrl(state, codeChallenge);
   }
 
-  public async verify(state: string, code: string): Promise<void> {
+  public async verify(state: string, code: string): Promise<[User, OAuth2Platform]> {
     const session = await this.getSession(state)
 
     if (!session) {
@@ -61,21 +70,25 @@ export abstract class OAuthService {
       }))
     }
 
-    try {
-      const userProfile = await this.getUserProfile(code)
+    const userProfile = await this.getUserProfile(code)
+    let user = await this.userRepository.findByEmail(userProfile.email)
 
-      if (session.action === OAuthAction.SIGN_UP) {
-        const user = await this.userService.createUser(userProfile.name, userProfile.email)
-        const userAvatar$ = this.http.get<Readable>(userProfile.avatarUrl, {
-          responseType: 'stream'
-        })
-        const userAvatar = await firstValueFrom(userAvatar$)
-          .then(response => response.data)
-        await this.userService.putUserAvatar(user.id, userAvatar)
-      }
-    } catch (error) {
+    if (!user) {
+      const userAvatar$ = this.http.get<Readable>(userProfile.avatarUrl, {
+        responseType: 'stream'
+      })
+      const userAvatar = await firstValueFrom(userAvatar$)
+        .then(response => response.data)
 
+      const newUser = new CreateUserDto()
+      newUser.name = userProfile.name
+      newUser.email = userProfile.email
+
+      user = await this.userService.createUser(newUser)
+      await this.userService.putUserAvatar(user.id, userAvatar)
     }
+
+    return [user, session.platform]
   }
 
   private generateSecureState(): string {
@@ -115,7 +128,7 @@ export interface UserProfile {
 
 export interface OAuthSession {
   state: string
-  provider: AuthProvider
-  action: OAuthAction
+  provider: OAuth2Provider
+  platform: OAuth2Platform
   codeVerifier?: string
 }

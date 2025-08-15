@@ -5,6 +5,7 @@ import { InjectMapper } from "@automapper/nestjs";
 import { Mapper } from "@automapper/core";
 import { PASSWORD_HASHER, PasswordHasher } from "../../../infrastructure/security/hash/password-hasher.interface";
 import { CreateUserDto } from "@ourtransfer/dto";
+import { Readable } from "stream";
 
 @Injectable()
 export class UserService {
@@ -22,5 +23,16 @@ export class UserService {
     }
 
     return await this.userRepository.save(user)
+  }
+
+  public async putUserAvatar(userId: string, avatar: Readable): Promise<void> {
+    // const user = await this.userRepository.findOneById(userId)
+
+    // if (!user) {
+    //   throw new NotFoundException(`User with ID ${userId} not found`)
+    // }
+
+    // user.avatar = avatar
+    // await this.userRepository.save(user)
   }
 }

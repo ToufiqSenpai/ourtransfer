@@ -17,7 +17,7 @@ import { User } from '../../../user/entities/user.entity'
 import { RefreshToken } from '../../entities/refresh-token.entity'
 import { TwoFactorAuthentication } from '../../entities/two-factor-authentication.entity'
 import { UserLoggedInEvent } from '../../events/user-logged-in.event'
-import { AuthProvider, AuthenticationStatus } from '@ourtransfer/common'
+import { AuthenticationStatus } from '@ourtransfer/common'
 
 describe('LoginHandler', () => {
   let handler: LoginHandler
@@ -568,7 +568,6 @@ describe('LoginHandler', () => {
         const publishedEvent = eventBus.publish.mock.calls[0][0] as UserLoggedInEvent
         expect(publishedEvent).toBeInstanceOf(UserLoggedInEvent)
         expect(publishedEvent.user).toBe(mockUser)
-        expect(publishedEvent.provider).toBe(AuthProvider.EMAIL_PASSWORD)
       })
     })
   })

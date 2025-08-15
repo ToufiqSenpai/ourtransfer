@@ -8,12 +8,12 @@ import {
   ApiNotFoundResponse,
   ApiUnauthorizedResponse,
   ApiForbiddenResponse,
+  ApiQuery,
 } from "@nestjs/swagger"
 import {
   RequestVerificationFromEmailBadRequestDto,
   RequestVerificationFromEmailDto,
   CommonResponseDto,
-  GetProvidersResponseDto,
   VerifyUserFromEmailDto,
   VerifyUserFromEmailBadRequestDto,
   SignupBadRequestDto,
@@ -23,7 +23,6 @@ import {
   PasswordResetBadRequestDto,
   VerifyPasswordResetBadRequestDto,
   LoginDto,
-  GetProvidersBadRequestDto,
   SendLoginVerificationCodeDto,
   LoginUnauthorizedDto
 } from "@ourtransfer/dto"
@@ -36,10 +35,13 @@ import { REFRESH_TOKEN_COOKIE_NAME } from "../constants/cookie-name.constant"
 import { NodeEnv } from "@ourtransfer/common"
 import { ConfigService } from "@nestjs/config"
 import { LoginValidationPipe } from '../pipes/login-validation.pipe';
-import { EmailValidationPipe } from "../../../common/pipes/email-validation.pipe";
-import { GetProvidersQuery } from "../queries/get-providers.query";
 import { SendLoginVerificationCodeCommand } from "../commands/send-login-verification-code.command";
 import { SendLoginVerificationCodePipe } from "../pipes/send-login-verification-code.pipe";
+import { GetGoogleAuthUrlQuery } from "../queries/get-google-auth-url.query";
+import { OAuth2Platform } from "../enums/oauth2-platform.enum";
+import { EnumValidationPipe } from "../../../common/pipes/enum-validation.pipe";
+import { GoogleOAuth2CallbackCommand } from "../commands/google-oauth2-callback.command";
+import { OAuth2Provider } from "../enums/oauth2-provider.enum";
 
 @Controller({ version: "1", path: "/auth" })
 export class AuthController {
@@ -48,28 +50,6 @@ export class AuthController {
     private readonly commandBus: CommandBus,
     private readonly config: ConfigService
   ) {}
-
-  @Get("/providers")
-  @ApiOperation({
-    summary: "Get login provider by email",
-    description:
-      "This endpoint returns the login provider for a given email address. This is useful for determining whether a user should log in with a password or a social provider.",
-  })
-  @ApiOkResponse({
-    type: GetProvidersResponseDto,
-    description: "The login provider for the given email address.",
-  })
-  @ApiBadRequestResponse({
-    type: GetProvidersBadRequestDto,
-    description: "The request body is invalid."
-  })
-  @ApiNotFoundResponse({
-    type: CommonResponseDto,
-    description: "The user with the given email address was not found.",
-  })
-  public async getProvider(@Query('email', EmailValidationPipe) email: string): Promise<GetProvidersResponseDto> {
-    return this.queryBus.execute(new GetProvidersQuery(email))
-  }
 
   @Post("/email/request")
   @ApiOperation({
@@ -176,27 +156,55 @@ export class AuthController {
     return this.commandBus.execute(new SendLoginVerificationCodeCommand(dto))
   }
 
-  @Get("/oauth/google")
+  @Get("/google")
   @ApiOperation({
-    summary: "Get Google OAuth URL",
-    description: "This endpoint returns the Google OAuth URL for authentication.",
+    summary: "Get Google OAuth2 URL",
+    description: "This endpoint returns the Google OAuth2 URL for authentication.",
+  })
+  @ApiQuery({
+    name: 'platform',
+    enum: OAuth2Platform,
+    description: 'The platform for which to retrieve the Google OAuth2 URL.',
+    required: true,
   })
   @ApiOkResponse({
     type: GoogleAuthResponseDto,
-    description: "The Google OAuth URL has been retrieved successfully.",
+    description: "The Google OAuth2 URL has been retrieved successfully.",
   })
-  public async googleAuth(): Promise<GoogleAuthResponseDto> {
-    return new GoogleAuthResponseDto()
+  public async googleAuth(@Query('platform', new EnumValidationPipe(OAuth2Platform, true)) platform: OAuth2Platform): Promise<GoogleAuthResponseDto> {
+    return this.queryBus.execute(new GetGoogleAuthUrlQuery(platform))
   }
 
-  @Get("/oauth/google/redirect")
+  @Get("/google/callback")
   @ApiOperation({
     summary: "Handle Google authentication redirect",
     description: "This endpoint handles the redirect from Google after the user has authenticated.",
   })
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  public async googleAuthRedirect(): Promise<void> {
+  public async googleAuthCallback(
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @Headers('User-Agent') userAgent: string,
+    @IpAddress() ipAddress: string,
+    @Res() res: Response
+  ): Promise<void> {
+    const result = await this.commandBus.execute(new GoogleOAuth2CallbackCommand(
+      code,
+      state,
+      userAgent,
+      ipAddress
+    ))
 
+    if (result.platform == OAuth2Platform.WEB) {
+      const searchParams = new URLSearchParams({
+        success: "true",
+        provider: OAuth2Provider.GOOGLE
+      })
+
+      res.cookie(REFRESH_TOKEN_COOKIE_NAME, result.refreshToken, this.getSetCookieOptions())
+      res.redirect(`${this.config.getOrThrow('client.web.oauth2Redirect')}?${searchParams.toString()}`)
+    } else {
+      res.status(500).send('Platform is not supported')
+    }
   }
 
   @Post("/refresh")

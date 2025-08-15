@@ -1,20 +1,21 @@
 import { ConfigService } from "@nestjs/config";
 import { User } from "../../user/entities/user.entity";
-import { TwoFactorAuthentication } from "../entities/two-factor-authentication.entity";
 import { authenticator, totp } from 'otplib'
+import { Injectable } from "@nestjs/common";
 
 export interface GeneratedSecret {
   secret: string
   otpauthUrl: string
 }
 
+@Injectable()
 export class TwoFactorAuthenticationService {
   private readonly APP_NAME: string
 
   public constructor(
     private readonly config: ConfigService
   ) {
-    this.APP_NAME = this.config.getOrThrow<string>('app.name')
+    this.APP_NAME = config.getOrThrow<string>('app.name')
   }
 
   public generateSecret(userEmail: string): GeneratedSecret {

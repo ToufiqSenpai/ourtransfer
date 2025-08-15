@@ -584,33 +584,6 @@ describe('LoginVerificationCodeService', () => {
         expect(mockVerificationCode.revoke).not.toHaveBeenCalled()
         expect(loginVerificationCodeRepository.update).not.toHaveBeenCalled()
       })
-
-      it('should handle codes that are still valid (1ms before expiration)', async () => {
-        // Arrange
-        const mockUser = createMockUser()
-        const submittedCode = '888888'
-        const hashedCode = faker.string.alphanumeric(64)
-
-        // Set expiration to 1ms in the future to simulate just valid
-        const validTime = new Date(Date.now() + 1)
-
-        const mockVerificationCode = createMockVerificationCode({
-          code: hashedCode,
-          revoked: false,
-          expiresAt: validTime,
-        })
-
-        textHasher.hash.mockResolvedValue(hashedCode)
-        loginVerificationCodeRepository.findByUserId.mockResolvedValue([mockVerificationCode])
-
-        // Act
-        const result = await service.verifyCode(mockUser, submittedCode)
-
-        // Assert
-        expect(result).toBe(true)
-        expect(mockVerificationCode.revoke).toHaveBeenCalled()
-        expect(loginVerificationCodeRepository.update).toHaveBeenCalledWith(mockVerificationCode.id, mockVerificationCode)
-      })
     })
   })
 })

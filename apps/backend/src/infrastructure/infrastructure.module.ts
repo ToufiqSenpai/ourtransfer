@@ -5,9 +5,11 @@ import { SecretModule } from './secret/secret.module';
 import { DatabaseModule } from './database/database.module';
 import { SecurityModule } from "./security/security.module"
 import { StorageModule } from './storage/storage.module';
+import { CacheModule } from './cache/cache.module';
+import { EmailModule } from './email/email.module';
 
 @Global()
 @Module({
-  imports: [ConfigModule, DatabaseModule, LoggerModule, SecretModule, SecurityModule, StorageModule],
+  imports: [CacheModule, ConfigModule, DatabaseModule, EmailModule, LoggerModule, SecretModule, SecurityModule, StorageModule],
 })
 export class InfrastructureModule {}

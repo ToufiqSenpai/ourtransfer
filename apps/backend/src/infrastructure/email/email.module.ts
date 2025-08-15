@@ -5,6 +5,7 @@ import { Resend } from 'resend'
 import { SecretManager } from '../secret/secret-manager.abstract'
 import { BullModule } from '@nestjs/bullmq'
 import { EmailConsumer } from './consumers/email.consumer'
+import { EmailService } from './email.service'
 
 @Global()
 @Module({
@@ -28,6 +29,10 @@ import { EmailConsumer } from './consumers/email.consumer'
     },
     // Consumers
     EmailConsumer,
+
+    // Services
+    EmailService
   ],
+  exports: [EmailService]
 })
 export class EmailModule {}

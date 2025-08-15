@@ -1,7 +1,7 @@
 import { UnitOfWork } from './unit-of-work.interface';
 import { Injectable, Inject } from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
-import { TransactionContextService, TRANSACTION_CONTEXT_SERVICE } from './transaction-context.service';
+import { TransactionContextService } from './transaction-context.service';
 import { Logger, LOGGER } from '../../logger/logger.interface';
 
 @Injectable()
@@ -9,7 +9,6 @@ export class UnitOfWorkImpl implements UnitOfWork {
   public constructor(
     private readonly dataSource: DataSource,
     @Inject(LOGGER) private readonly logger: Logger,
-    @Inject(TRANSACTION_CONTEXT_SERVICE)
     private readonly transactionContext: TransactionContextService<EntityManager>
   ) {
   }

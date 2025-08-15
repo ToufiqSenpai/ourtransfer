@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TransactionContextServiceImpl } from './transaction-context.service.impl';
+import { TransactionContextService } from './transaction-context.service';
 
-describe('TransactionContextServiceImpl', () => {
-  let service: TransactionContextServiceImpl<any>;
+describe('TransactionContextService', () => {
+  let service: TransactionContextService<any>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [TransactionContextServiceImpl],
+      providers: [TransactionContextService],
     }).compile();
 
-    service = module.get<TransactionContextServiceImpl<any>>(TransactionContextServiceImpl);
+    service = module.get<TransactionContextService<any>>(TransactionContextService);
   });
 
   it('should be defined', () => {
@@ -181,7 +181,7 @@ describe('TransactionContextServiceImpl', () => {
         timestamp: Date;
       }
 
-      const typedService = new TransactionContextServiceImpl<TestContext>();
+      const typedService = new TransactionContextService<TestContext>();
       const testContext: TestContext = {
         transactionId: 'tx-456',
         userId: 789,

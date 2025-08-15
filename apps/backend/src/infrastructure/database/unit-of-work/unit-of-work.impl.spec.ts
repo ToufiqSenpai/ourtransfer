@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource, EntityManager, QueryRunner } from 'typeorm';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { UnitOfWorkImpl } from './unit-of-work.impl';
-import { TransactionContextService, TRANSACTION_CONTEXT_SERVICE } from './transaction-context.service';
+import { TransactionContextService } from './transaction-context.service';
 import { Logger, LOGGER } from '../../logger/logger.interface';
 
 describe('UnitOfWorkImpl', () => {
@@ -42,7 +42,7 @@ describe('UnitOfWorkImpl', () => {
           useValue: mockLogger,
         },
         {
-          provide: TRANSACTION_CONTEXT_SERVICE,
+          provide: TransactionContextService,
           useValue: mockTransactionContext,
         },
       ],

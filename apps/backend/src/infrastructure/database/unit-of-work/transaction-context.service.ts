@@ -1,6 +1,15 @@
-export const TRANSACTION_CONTEXT_SERVICE = Symbol('TransactionContextService')
+import { Injectable } from '@nestjs/common';
+import { AsyncLocalStorage } from 'async_hooks';
 
-export interface TransactionContextService<T> {
-  getContext(): T | undefined
-  run<U>(context: T, callback: () => Promise<U>): Promise<U>
+@Injectable()
+export class TransactionContextService<T> {
+  private readonly storage = new AsyncLocalStorage<T>()
+
+  public getContext(): T | undefined {
+    return this.storage.getStore()
+  }
+
+  public run<U>(context: T, callback: () => Promise<U>): Promise<U> {
+    return this.storage.run(context, callback)
+  }
 }

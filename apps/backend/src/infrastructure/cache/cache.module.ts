@@ -1,7 +1,10 @@
-import { Module } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { Redis } from "ioredis";
 import { SecretManager } from "../secret/secret-manager.abstract";
+import { CACHE } from "./cache.interface";
+import { RedisCache } from "./redis.cache";
 
+@Global()
 @Module({
   providers: [
     {
@@ -13,7 +16,12 @@ import { SecretManager } from "../secret/secret-manager.abstract";
         });
       },
       inject: [SecretManager]
+    },
+    {
+      provide: CACHE,
+      useClass: RedisCache
     }
-  ]
+  ],
+  exports: [CACHE]
 })
 export class CacheModule {}

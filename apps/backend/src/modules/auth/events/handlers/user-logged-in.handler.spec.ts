@@ -59,8 +59,8 @@ describe('UserLoggedInHandler', () => {
       })
     }
 
-    const createUserLoggedInEvent = (user: User, provider: AuthProvider = AuthProvider.EMAIL_PASSWORD): UserLoggedInEvent => {
-      return new UserLoggedInEvent(user, provider)
+    const createUserLoggedInEvent = (user: User): UserLoggedInEvent => {
+      return new UserLoggedInEvent(user)
     }
 
     describe('successful scenarios', () => {
@@ -90,9 +90,9 @@ describe('UserLoggedInHandler', () => {
           // Add other providers if they exist in the enum
         ]
 
-        for (const provider of authProviders) {
+        for (const _ of authProviders) {
           const mockUser = createMockUser()
-          const event = createUserLoggedInEvent(mockUser, provider)
+          const event = createUserLoggedInEvent(mockUser)
 
           userRepository.update.mockResolvedValue(undefined)
 

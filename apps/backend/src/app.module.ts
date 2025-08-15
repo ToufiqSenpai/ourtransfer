@@ -13,7 +13,9 @@ import { AuthModule } from "./modules/auth/auth.module"
     AutomapperModule.forRoot({
       strategyInitializer: classes()
     }),
-    HttpModule,
+    HttpModule.register({
+      global: true,
+    }),
     InfrastructureModule,
     AuthModule,
     UserModule
