@@ -26,7 +26,7 @@ export abstract class OAuth2Service {
 
   protected abstract buildAuthUrl(state: string, codeChallenge?: string): Promise<string> | string
 
-  protected abstract getUserProfile(code: string): Promise<UserProfile>
+  protected abstract getUserProfile(code: string, codeVerifier?: string): Promise<UserProfile>
 
   public async getAuthUrl(platform: OAuth2Platform): Promise<string> {
     if (![OAuth2Platform.WEB].includes(platform)) {
@@ -70,7 +70,7 @@ export abstract class OAuth2Service {
       }))
     }
 
-    const userProfile = await this.getUserProfile(code)
+    const userProfile = await this.getUserProfile(code, session.codeVerifier)
     let user = await this.userRepository.findByEmail(userProfile.email)
 
     if (!user) {
@@ -87,6 +87,8 @@ export abstract class OAuth2Service {
       user = await this.userService.createUser(newUser)
       await this.userService.putUserAvatar(user.id, userAvatar)
     }
+
+    this.cache.delete(state)
 
     return [user, session.platform]
   }
