@@ -13,6 +13,8 @@ import { OAuth2Provider } from "../enums/oauth2-provider.enum";
 import { OAuth2Platform } from "../enums/oauth2-platform.enum";
 
 export abstract class OAuth2Service {
+  private readonly OAUTH2_SESSION_TTL = 300 // 5 minutes
+
   public constructor(
     protected readonly cache: Cache,
     protected readonly userService: UserService,
@@ -118,7 +120,7 @@ export abstract class OAuth2Service {
 
   private async setSession(state: string, session: OAuthSession): Promise<void> {
     const sessionKey = this.getSessionKey(state);
-    await this.cache.set(sessionKey, session);
+    await this.cache.set(sessionKey, session, this.OAUTH2_SESSION_TTL);
   }
 }
 
