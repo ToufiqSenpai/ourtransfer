@@ -12,6 +12,7 @@ import { RefreshTokenService } from './services/refresh-token.service';
 import { TwoFactorAuthenticationService } from './services/two-factor-authentication.service';
 import { GoogleOAuth2Service } from './services/google-oauth2.service';
 import { GetGoogleAuthUrlHandler } from './queries/handlers/get-google-auth-url.handler';
+import { MicrosoftOAuth2Service } from './services/microsoft-oauth2.service';
 
 @Module({
   imports: [forwardRef(() => UserModule)],
@@ -32,6 +33,7 @@ import { GetGoogleAuthUrlHandler } from './queries/handlers/get-google-auth-url.
 
     // Services
     GoogleOAuth2Service,
+    MicrosoftOAuth2Service,
     LoginVerificationCodeService,
     RefreshTokenService,
     TwoFactorAuthenticationService,

@@ -1,19 +1,22 @@
-import { Cache } from "../../../infrastructure/cache/cache.interface";
-import { BadRequestException, NotImplementedException } from "@nestjs/common";
-import { plainToInstance } from "class-transformer";
-import { CommonResponseDto, CreateUserDto } from "@ourtransfer/dto";
-import { randomBytes, createHash } from 'crypto';
-import { UserService } from "../../user/services/user.service";
-import { HttpService } from "@nestjs/axios";
-import { firstValueFrom } from "rxjs";
-import { Readable } from "stream";
-import { UserRepository } from "../../user/repositories/user.repository";
-import { User } from "../../user/entities/user.entity";
-import { OAuth2Provider } from "../enums/oauth2-provider.enum";
-import { OAuth2Platform } from "../enums/oauth2-platform.enum";
+import { Cache } from '../../../infrastructure/cache/cache.interface';
+import { BadRequestException, NotImplementedException } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { CommonResponseDto, CreateUserDto } from '@ourtransfer/dto';
+import { createHash, randomBytes } from 'crypto';
+import { UserService } from '../../user/services/user.service';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { Readable } from 'stream';
+import { UserRepository } from '../../user/repositories/user.repository';
+import { User } from '../../user/entities/user.entity';
+import { OAuth2Provider } from '../enums/oauth2-provider.enum';
+import { OAuth2Platform } from '../enums/oauth2-platform.enum';
+import { JwksClient, Options as JwksOptions } from 'jwks-rsa';
+import * as jwt from 'jsonwebtoken';
 
 export abstract class OAuth2Service {
   private readonly OAUTH2_SESSION_TTL = 300 // 5 minutes
+  private jwksClient: JwksClient | null = null
 
   public constructor(
     protected readonly cache: Cache,
@@ -26,9 +29,30 @@ export abstract class OAuth2Service {
 
   protected abstract get supportsPKCE(): boolean
 
+  protected abstract get jwksOptions(): JwksOptions | null
+
   protected abstract buildAuthUrl(state: string, codeChallenge?: string): Promise<string> | string
 
   protected abstract getUserProfile(code: string, codeVerifier?: string): Promise<UserProfile>
+
+  protected async verifyAndDecodeIdToken<T>(idToken: string, options?: jwt.VerifyOptions): Promise<T> {
+    if (!this.jwksClient) {
+      if (!this.jwksOptions) {
+        throw new Error("JWKS client and options are not available.")
+      }
+      this.jwksClient = new JwksClient(this.jwksOptions)
+    }
+
+    const decodedHeader = jwt.decode(idToken, { complete: true }) as jwt.Jwt
+
+    if (!decodedHeader.header.kid) {
+      throw new Error("Missing 'kid' claim in ID token header.")
+    }
+
+    const signingKey = await this.jwksClient.getSigningKey(decodedHeader.header.kid)
+
+    return jwt.verify(idToken, signingKey.getPublicKey(), options) as jwt.JwtPayload & T
+  }
 
   public async getAuthUrl(platform: OAuth2Platform): Promise<string> {
     if (![OAuth2Platform.WEB].includes(platform)) {
@@ -90,7 +114,7 @@ export abstract class OAuth2Service {
       await this.userService.putUserAvatar(user.id, userAvatar)
     }
 
-    this.cache.delete(state)
+    await this.cache.delete(state)
 
     return [user, session.platform]
   }

@@ -103,6 +103,7 @@ export default tseslint.config(
         {
           selector: "classProperty",
           format: ["camelCase", "UPPER_CASE"],
+          "leadingUnderscore": "allow",
         },
         {
           selector: "enum",
@@ -132,6 +133,7 @@ export default tseslint.config(
         {
           selector: "parameter",
           format: ["camelCase"],
+          leadingUnderscore: "allow",
         },
         {
           selector: "parameterProperty",

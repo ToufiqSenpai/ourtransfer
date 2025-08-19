@@ -24,7 +24,8 @@ import {
   VerifyPasswordResetBadRequestDto,
   LoginDto,
   SendLoginVerificationCodeDto,
-  LoginUnauthorizedDto
+  LoginUnauthorizedDto,
+  MicrosoftAuthResponseDto
 } from "@ourtransfer/dto"
 import { SignupValidationPipe } from '../pipes/signup-validation.pipe';
 import { SignupCommand } from '../commands/signup.command';
@@ -42,6 +43,9 @@ import { OAuth2Platform } from "../enums/oauth2-platform.enum";
 import { EnumValidationPipe } from "../../../common/pipes/enum-validation.pipe";
 import { GoogleOAuth2CallbackCommand } from "../commands/google-oauth2-callback.command";
 import { OAuth2Provider } from "../enums/oauth2-provider.enum";
+import { GetMicrosoftAuthUrlQuery } from "../queries/get-microsoft-auth-url.query";
+import { MicrosoftOAuth2CallbackCommand } from "../commands/microsoft-oauth2-callback.command";
+import { OAuth2CallbackResult } from "../types/oauth2-callback-result.interface";
 
 @Controller({ version: "1", path: "/auth" })
 export class AuthController {
@@ -207,6 +211,47 @@ export class AuthController {
     }
   }
 
+  @Get("/microsoft")
+  @ApiOperation({
+    summary: "Get Microsoft OAuth2 URL",
+    description: "This endpoint returns the Microsoft OAuth2 URL for authentication.",
+  })
+  @ApiQuery({
+    name: 'platform',
+    enum: OAuth2Platform,
+    description: 'The platform for which to retrieve the Microsoft OAuth2 URL.',
+    required: true,
+  })
+  @ApiOkResponse({
+    type: MicrosoftAuthResponseDto,
+    description: "The Microsoft OAuth2 URL has been retrieved successfully.",
+  })
+  public async microsoftAuth(@Query('platform', new EnumValidationPipe(OAuth2Platform, true)) platform: OAuth2Platform): Promise<MicrosoftAuthResponseDto> {
+    return this.queryBus.execute(new GetMicrosoftAuthUrlQuery(platform))
+  }
+
+  @Get("/microsoft/callback")
+  @ApiOperation({
+    summary: "Handle Microsoft authentication redirect",
+    description: "This endpoint handles the redirect from Microsoft after the user has authenticated.",
+  })
+  public async microsoftAuthCallback(
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @Headers('User-Agent') userAgent: string,
+    @IpAddress() ipAddress: string,
+    @Res() res: Response
+  ): Promise<void> {
+    const result = await this.commandBus.execute(new MicrosoftOAuth2CallbackCommand(
+      code,
+      state,
+      userAgent,
+      ipAddress
+    ))
+
+    this.handleOAuth2CallbackResponse(OAuth2Provider.MICROSOFT, result, res)
+  }
+
   @Post("/refresh")
   @ApiOperation({
     summary: "Refresh access token",
@@ -266,6 +311,20 @@ export class AuthController {
       maxAge: this.config.get('auth.refreshToken.expiresIn'),
       sameSite: this.config.get('app.nodeEnv') === NodeEnv.PRODUCTION ? 'none' : 'strict',
       secure: this.config.get('app.nodeEnv') === NodeEnv.PRODUCTION,
+    }
+  }
+
+  private handleOAuth2CallbackResponse(provider: OAuth2Provider, result: OAuth2CallbackResult, res: Response): void {
+    if (result.platform === OAuth2Platform.WEB) {
+      const searchParams = new URLSearchParams({
+        success: "true",
+        provider
+      });
+
+      res.cookie(REFRESH_TOKEN_COOKIE_NAME, result.refreshToken, this.getSetCookieOptions());
+      res.redirect(`${this.config.getOrThrow('client.web.oauth2Redirect')}?${searchParams.toString()}`);
+    } else {
+      res.status(500).send('Platform is not supported');
     }
   }
 }
