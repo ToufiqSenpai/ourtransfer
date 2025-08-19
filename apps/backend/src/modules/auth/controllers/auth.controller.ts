@@ -198,17 +198,7 @@ export class AuthController {
       ipAddress
     ))
 
-    if (result.platform == OAuth2Platform.WEB) {
-      const searchParams = new URLSearchParams({
-        success: "true",
-        provider: OAuth2Provider.GOOGLE
-      })
-
-      res.cookie(REFRESH_TOKEN_COOKIE_NAME, result.refreshToken, this.getSetCookieOptions())
-      res.redirect(`${this.config.getOrThrow('client.web.oauth2Redirect')}?${searchParams.toString()}`)
-    } else {
-      res.status(500).send('Platform is not supported')
-    }
+    this.handleOAuth2CallbackResponse(OAuth2Provider.GOOGLE, result, res)
   }
 
   @Get("/microsoft")
