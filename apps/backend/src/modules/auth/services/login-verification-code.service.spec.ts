@@ -92,7 +92,7 @@ describe('LoginVerificationCodeService', () => {
         textHasher.hash.mockResolvedValue(mockHashedCode)
         configService.getOrThrow.mockReturnValue(mockExpiresIn)
         loginVerificationCodeRepository.save.mockResolvedValue(createMockVerificationCode())
-        emailService.sendEmail.mockResolvedValue()
+        emailService.send.mockResolvedValue()
 
         // Act
         await service.sendVerificationCode(mockUser)
@@ -107,7 +107,7 @@ describe('LoginVerificationCodeService', () => {
             expiresAt: expect.any(Date),
           })
         )
-        expect(emailService.sendEmail).toHaveBeenCalledWith(
+        expect(emailService.send).toHaveBeenCalledWith(
           mockUser.email,
           'Your Verification Code',
           {
@@ -126,7 +126,7 @@ describe('LoginVerificationCodeService', () => {
         textHasher.hash.mockResolvedValue(mockHashedCode)
         configService.getOrThrow.mockReturnValue(mockExpiresIn)
         loginVerificationCodeRepository.save.mockResolvedValue(createMockVerificationCode())
-        emailService.sendEmail.mockResolvedValue()
+        emailService.send.mockResolvedValue()
 
         // Act
         await service.sendVerificationCode(mockUser)
@@ -149,7 +149,7 @@ describe('LoginVerificationCodeService', () => {
         textHasher.hash.mockResolvedValue(mockHashedCode)
         configService.getOrThrow.mockReturnValue(mockExpiresIn)
         loginVerificationCodeRepository.save.mockResolvedValue(createMockVerificationCode())
-        emailService.sendEmail.mockResolvedValue()
+        emailService.send.mockResolvedValue()
 
         // Act
         await service.sendVerificationCode(mockUser)
@@ -179,13 +179,13 @@ describe('LoginVerificationCodeService', () => {
           textHasher.hash.mockResolvedValue(mockHashedCode)
           configService.getOrThrow.mockReturnValue(300)
           loginVerificationCodeRepository.save.mockResolvedValue(createMockVerificationCode())
-          emailService.sendEmail.mockResolvedValue()
+          emailService.send.mockResolvedValue()
 
           // Act
           await service.sendVerificationCode(mockUser)
 
           // Assert
-          expect(emailService.sendEmail).toHaveBeenCalledWith(
+          expect(emailService.send).toHaveBeenCalledWith(
             email,
             'Your Verification Code',
             expect.any(Object)
@@ -208,7 +208,7 @@ describe('LoginVerificationCodeService', () => {
         // Act & Assert
         await expect(service.sendVerificationCode(mockUser)).rejects.toThrow(hashError)
         expect(loginVerificationCodeRepository.save).not.toHaveBeenCalled()
-        expect(emailService.sendEmail).not.toHaveBeenCalled()
+        expect(emailService.send).not.toHaveBeenCalled()
       })
 
       it('should propagate errors from repository.save', async () => {
@@ -223,10 +223,10 @@ describe('LoginVerificationCodeService', () => {
 
         // Act & Assert
         await expect(service.sendVerificationCode(mockUser)).rejects.toThrow(repositoryError)
-        expect(emailService.sendEmail).not.toHaveBeenCalled()
+        expect(emailService.send).not.toHaveBeenCalled()
       })
 
-      it('should propagate errors from emailService.sendEmail', async () => {
+      it('should propagate errors from emailService.send', async () => {
         // Arrange
         const mockUser = createMockUser()
         const mockHashedCode = faker.string.alphanumeric(64)
@@ -235,7 +235,7 @@ describe('LoginVerificationCodeService', () => {
         textHasher.hash.mockResolvedValue(mockHashedCode)
         configService.getOrThrow.mockReturnValue(300)
         loginVerificationCodeRepository.save.mockResolvedValue(createMockVerificationCode())
-        emailService.sendEmail.mockRejectedValue(emailError)
+        emailService.send.mockRejectedValue(emailError)
 
         // Act & Assert
         await expect(service.sendVerificationCode(mockUser)).rejects.toThrow(emailError)

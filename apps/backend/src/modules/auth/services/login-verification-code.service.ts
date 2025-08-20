@@ -43,7 +43,7 @@ export class LoginVerificationCodeService {
 
     await this.loginVerificationCodeRepository.save(verificationCode);
 
-    await this.emailService.sendEmail(user.email, 'Your Verification Code', {
+    await this.emailService.send(user.email, 'Your Verification Code', {
       name: 'login-verification-code',
       payload: { code: code.toString() },
     });

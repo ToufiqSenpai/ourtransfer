@@ -1,24 +1,18 @@
 import { Global, Module } from '@nestjs/common'
-import { EMAIL } from './email.interface'
-import { ResendEmail } from './resend.email'
 import { Resend } from 'resend'
 import { SecretManager } from '../secret/secret-manager.abstract'
 import { BullModule } from '@nestjs/bullmq'
-import { EmailConsumer } from './consumers/email.consumer'
+import { EMAIL_QUEUE, EmailConsumer } from './email.consumer'
 import { EmailService } from './email.service'
 
 @Global()
 @Module({
   imports: [
     BullModule.registerQueue({
-      name: 'email',
+      name: EMAIL_QUEUE,
     }),
   ],
   providers: [
-    {
-      provide: EMAIL,
-      useClass: ResendEmail,
-    },
     {
       provide: Resend,
       async useFactory(secretManager: SecretManager): Promise<Resend> {
