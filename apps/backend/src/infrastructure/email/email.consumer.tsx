@@ -2,10 +2,9 @@ import React from "react"
 import { Processor, WorkerHost } from "@nestjs/bullmq"
 import { Job } from "bullmq"
 import { render } from "@react-email/render"
-import { LOGGER, Logger } from "../logger/logger.interface"
+import { Logger } from "../log/logger.abstract"
 import { Resend } from "resend"
 import { ConfigService } from "@nestjs/config"
-import { Inject } from "@nestjs/common"
 import PasswordResetTemplate from "./templates/password-reset.template"
 import LoginVerificationCodeTemplate from "./templates/login-verification-code.template"
 
@@ -22,7 +21,7 @@ export class EmailConsumer extends WorkerHost {
   private readonly templates = new Map<string, (props: any) => React.ReactElement>()
 
   public constructor(
-    @Inject(LOGGER) private readonly logger: Logger,
+    private readonly logger: Logger,
     private readonly resend: Resend,
     private readonly config: ConfigService,
   ) {

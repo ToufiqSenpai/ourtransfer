@@ -6,6 +6,7 @@ import { classes } from "@automapper/classes"
 import { HttpModule } from "@nestjs/axios"
 import { UserModule } from "./modules/user/user.module"
 import { AuthModule } from "./modules/auth/auth.module"
+import { CommonModule } from "./common/common.module"
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { AuthModule } from "./modules/auth/auth.module"
     HttpModule.register({
       global: true,
     }),
+    CommonModule,
     InfrastructureModule,
     AuthModule,
     UserModule

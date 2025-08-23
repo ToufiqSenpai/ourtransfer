@@ -4,7 +4,7 @@ import { faker } from '@faker-js/faker'
 import { plainToInstance } from 'class-transformer'
 import { UserLoggedInHandler } from './user-logged-in.handler'
 import { UserLoggedInEvent } from '../user-logged-in.event'
-import { LOGGER, Logger } from '../../../../infrastructure/logger/logger.interface'
+import { Logger } from '../../../../infrastructure/log/logger.abstract'
 import { UserRepository } from '../../../user/repositories/user.repository'
 import { User } from '../../../user/entities/user.entity'
 import { AuthProvider } from '@ourtransfer/common'
@@ -26,7 +26,7 @@ describe('UserLoggedInHandler', () => {
       providers: [
         UserLoggedInHandler,
         {
-          provide: LOGGER,
+          provide: Logger,
           useValue: mock<Logger>(),
         },
         {
@@ -37,7 +37,7 @@ describe('UserLoggedInHandler', () => {
     }).compile()
 
     handler = module.get<UserLoggedInHandler>(UserLoggedInHandler)
-    logger = module.get<MockProxy<Logger>>(LOGGER)
+    logger = module.get<MockProxy<Logger>>(Logger)
     userRepository = module.get<MockProxy<UserRepository>>(UserRepository)
   })
 

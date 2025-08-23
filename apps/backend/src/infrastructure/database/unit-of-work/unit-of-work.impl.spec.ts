@@ -3,7 +3,7 @@ import { DataSource, EntityManager, QueryRunner } from 'typeorm';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { UnitOfWorkImpl } from './unit-of-work.impl';
 import { TransactionContextService } from './transaction-context.service';
-import { Logger, LOGGER } from '../../logger/logger.interface';
+import { Logger } from '../../log/logger.abstract';
 
 describe('UnitOfWorkImpl', () => {
   let unitOfWork: UnitOfWorkImpl;
@@ -38,7 +38,7 @@ describe('UnitOfWorkImpl', () => {
           useValue: mockDataSource,
         },
         {
-          provide: LOGGER,
+          provide: Logger,
           useValue: mockLogger,
         },
         {

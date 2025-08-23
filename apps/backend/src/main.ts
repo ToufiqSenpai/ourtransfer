@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config"
 import { NestFactory, HttpAdapterHost } from "@nestjs/core"
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger"
 import { AppModule } from "./app.module"
-import { LOGGER, Logger } from "./infrastructure/logger/logger.interface"
+import { Logger } from "./infrastructure/log/logger.abstract"
 import { AllExceptionFilter } from "./common/filters/all-exception.filter"
 import { ZodExceptionFilter } from "./common/filters/zod-exception.filter"
 import { json } from "express"
@@ -15,7 +15,7 @@ async function bootstrap(): Promise<void> {
     bodyParser: false,
   })
 
-  const logger = await app.resolve<Logger>(LOGGER)
+  const logger = await app.resolve<Logger>(Logger)
   const config = app.get(ConfigService)
   const httpAdapter = app.get(HttpAdapterHost)
   const domain = config.get<string>("app.domain")

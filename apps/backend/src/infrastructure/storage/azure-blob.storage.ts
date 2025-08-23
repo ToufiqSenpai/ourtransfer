@@ -1,4 +1,4 @@
-import { HttpStatus, Inject, Injectable } from "@nestjs/common"
+import { HttpStatus, Injectable } from "@nestjs/common"
 import { ContainerClient } from "@azure/storage-blob"
 import {
   FileHeaders,
@@ -7,13 +7,13 @@ import {
   FileStorage,
 } from "./file-storage.interface"
 import { Readable } from "stream"
-import { Logger, LOGGER } from "../logger/logger.interface"
+import { Logger } from "../log/logger.abstract"
 
 @Injectable()
 export class AzureBlobStorage implements FileStorage {
   public constructor(
     private readonly containerClient: ContainerClient,
-    @Inject(LOGGER) private readonly logger: Logger,
+    private readonly logger: Logger,
   ) {}
 
   public initiateMultipartUpload(filePath: string, headers?: FileHeaders, metadata?: FileMetadata): Promise<void> {

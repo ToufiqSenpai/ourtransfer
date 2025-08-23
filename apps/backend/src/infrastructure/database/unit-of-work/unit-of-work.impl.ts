@@ -1,14 +1,14 @@
 import { UnitOfWork } from './unit-of-work.interface';
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
 import { TransactionContextService } from './transaction-context.service';
-import { Logger, LOGGER } from '../../logger/logger.interface';
+import { Logger } from '../../log/logger.abstract';
 
 @Injectable()
 export class UnitOfWorkImpl implements UnitOfWork {
   public constructor(
     private readonly dataSource: DataSource,
-    @Inject(LOGGER) private readonly logger: Logger,
+    private readonly logger: Logger,
     private readonly transactionContext: TransactionContextService<EntityManager>
   ) {
   }

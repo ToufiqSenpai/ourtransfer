@@ -3,7 +3,7 @@ import { TypeOrmModule } from "@nestjs/typeorm"
 import { ConfigService } from "@nestjs/config"
 import { SecretManager } from "../secret/secret-manager.abstract"
 import { NodeEnv } from "@ourtransfer/common"
-import { TypeOrmLogger } from "./typeorm.logger"
+import { TypeOrmLogger } from "../log/logger/typeorm.logger"
 import { User } from '../../modules/user/entities/user.entity';
 import { RefreshToken } from '../../modules/auth/entities/refresh-token.entity';
 import { TransactionContextService } from "./unit-of-work/transaction-context.service"
@@ -36,7 +36,6 @@ import { TwoFactorAuthentication } from "../../modules/auth/entities/two-factor-
     }),
   ],
   providers: [
-    TypeOrmLogger,
     ProviderUtil,
     TransactionContextService,
     {
@@ -44,6 +43,6 @@ import { TwoFactorAuthentication } from "../../modules/auth/entities/two-factor-
       useClass: UnitOfWorkImpl
     }
   ],
-  exports: [TypeOrmLogger, UNIT_OF_WORK, TransactionContextService, ProviderUtil],
+  exports: [UNIT_OF_WORK, TransactionContextService, ProviderUtil],
 })
 export class DatabaseModule {}

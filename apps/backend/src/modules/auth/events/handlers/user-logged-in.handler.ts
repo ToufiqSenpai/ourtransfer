@@ -1,12 +1,11 @@
 import { IEventHandler } from "@nestjs/cqrs";
 import { UserLoggedInEvent } from "../user-logged-in.event";
-import { Inject } from "@nestjs/common";
-import { LOGGER, Logger } from "../../../../infrastructure/logger/logger.interface";
+import { Logger } from "../../../../infrastructure/log/logger.abstract";
 import { UserRepository } from "../../../user/repositories/user.repository";
 
 export class UserLoggedInHandler implements IEventHandler<UserLoggedInEvent> {
   public constructor(
-    @Inject(LOGGER) private readonly logger: Logger,
+    private readonly logger: Logger,
     private readonly userRepository: UserRepository,
   ) {}
 
