@@ -25,7 +25,7 @@ import {
   LoginDto,
   SendLoginVerificationCodeDto,
   LoginUnauthorizedDto,
-  MicrosoftAuthResponseDto
+  MicrosoftAuthResponseDto, GetRefreshTokenDto
 } from "@ourtransfer/dto"
 import { SignupValidationPipe } from '../pipes/signup-validation.pipe';
 import { SignupCommand } from '../commands/signup.command';
@@ -46,6 +46,8 @@ import { OAuth2Provider } from "../enums/oauth2-provider.enum";
 import { GetMicrosoftAuthUrlQuery } from "../queries/get-microsoft-auth-url.query";
 import { MicrosoftOAuth2CallbackCommand } from "../commands/microsoft-oauth2-callback.command";
 import { OAuth2CallbackResult } from "../types/oauth2-callback-result.interface";
+import { GetRefreshTokenCommand } from '../commands/get-refresh-token.command';
+import { GetRefreshTokenValidationPipe } from '../pipes/get-refresh-token-validation.pipe';
 
 @Controller({ version: "1", path: "/auth" })
 export class AuthController {
@@ -242,7 +244,7 @@ export class AuthController {
     this.handleOAuth2CallbackResponse(OAuth2Provider.MICROSOFT, result, res)
   }
 
-  @Post("/refresh")
+  @Post("/refresh-token")
   @ApiOperation({
     summary: "Refresh access token",
     description: "This endpoint refreshes the access token using the refresh token.",
@@ -256,8 +258,12 @@ export class AuthController {
     description: "The user is not authorized to perform this action.",
   })
   @HttpCode(HttpStatus.OK)
-  public async refreshToken(): Promise<TokensDto> {
-    return new TokensDto()
+  public async refreshToken(
+    @Body(GetRefreshTokenValidationPipe) body: GetRefreshTokenDto,
+    @Headers('User-Agent') userAgent: string,
+    @IpAddress() ipAddress: string,
+  ): Promise<TokensDto> {
+    return this.commandBus.execute(new GetRefreshTokenCommand(body.refreshToken, userAgent, ipAddress))
   }
 
   @Post("/password-reset")
